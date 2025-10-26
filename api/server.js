@@ -1,21 +1,23 @@
-// =================================================================
-// GANTI SELURUH ISI SERVER.JS ANDA DENGAN KODE BARU INI
-// =================================================================
-require('dotenv').config();
+// Vercel Serverless Function Handler
 const express = require('express');
 const mongoose = require('mongoose');
-const User = require('./models/User');
-const Simulation = require('./models/Simulation');
-const Score = require('./models/Score');
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-// JWT Secret dari environment variable atau fallback
+require('dotenv').config();
+
+// Import models
+const User = require('../models/User');
+const Simulation = require('../models/Simulation');
+const Score = require('../models/Score');
+
+const app = express();
+
+// Environment variables
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
 const JWT_SECRET = process.env.JWT_SECRET || 'kunci-rahasia-ini-sangat-aman-dan-harus-diganti';
 
-// AWAL Gemini AI
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY_HERE';
-
+// System instruction untuk AI
 const systemInstruction = `
 Anda adalah tutor fisika yang ramah untuk sebuah web pembelajaran.
 Topik keahlian Anda hanya dan secara eksklusif adalah gerak parabola.
@@ -52,48 +54,67 @@ Karakteristik utama:
 Contoh nyata: bola basket yang dilempar ke ring.
 `;
 
+// Function untuk memformat response agar lebih rapi
 function formatGeminiResponse(text) {
+    // Mulai dengan membersihkan teks secara umum
     let formatted = text.trim();
     
-    formatted = formatted.replace(/\*{3,}/g, ''); 
-    formatted = formatted.replace(/([^:]+):\*+/g, '<strong>$1:</strong>'); 
+    // 1. Bersihkan tanda bintang berlebihan dan malformed headers
+    formatted = formatted.replace(/\*{3,}/g, ''); // Hapus triple atau lebih asterisk
+    formatted = formatted.replace(/([^:]+):\*+/g, '<strong>$1:</strong>'); // Header dengan asterisk berlebih
     
-    formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'); 
-    formatted = formatted.replace(/\*([^*]+)\*(?!\*)/g, '<strong>$1</strong>'); 
+    // 2. Format bold text dengan asterisk
+    formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'); // Double asterisk
+    formatted = formatted.replace(/\*([^*]+)\*(?!\*)/g, '<strong>$1</strong>'); // Single asterisk
     
-    formatted = formatted.replace(/\*(?![a-zA-Z0-9])/g, '');
+    // 3. Bersihkan asterisk yang tersisa
+    formatted = formatted.replace(/\*(?![a-zA-Z0-9])/g, ''); // Asterisk yang tidak diikuti huruf/angka
     
+    // 4. Format mathematical expressions
+    // LaTeX commands ke Unicode/HTML
     formatted = formatted.replace(/\\theta/g, 'θ');
     formatted = formatted.replace(/\\sin/g, 'sin');
     formatted = formatted.replace(/\\cos/g, 'cos');
     formatted = formatted.replace(/\\tan/g, 'tan');
     formatted = formatted.replace(/\\cdot/g, '·');
     
+    // Format fractions
     formatted = formatted.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '<span class="formula">($1)/($2)</span>');
     
+    // Format subscripts dan superscripts
     formatted = formatted.replace(/([a-zA-Z])_\{([^}]+)\}/g, '$1<sub>$2</sub>');
     formatted = formatted.replace(/([a-zA-Z])_([a-zA-Z0-9])/g, '$1<sub>$2</sub>');
     formatted = formatted.replace(/\^\{([^}]+)\}/g, '<sup>$1</sup>');
     formatted = formatted.replace(/\^([0-9]+)/g, '<sup>$1</sup>');
     
+    // Format expressions dalam $ $
     formatted = formatted.replace(/\$([^$]+)\$/g, '<span class="formula">$1</span>');
     
+    // 5. Format struktur teks
+    // Bullet points
     formatted = formatted.replace(/•\s*/g, '<br>• ');
     formatted = formatted.replace(/\n•/g, '<br>•');
     
+    // Numbered lists
     formatted = formatted.replace(/(\d+)\.\s*/g, '<br>$1. ');
     
+    // Headers dan sections (kata diikuti titik dua)
     formatted = formatted.replace(/\n([A-Za-z\s]+):/g, '<br><strong>$1:</strong>');
     formatted = formatted.replace(/^([A-Za-z\s]+):/g, '<strong>$1:</strong>');
     
-    formatted = formatted.replace(/\n\n/g, '<br><br>'); 
-    formatted = formatted.replace(/\n/g, '<br>'); 
+    // 6. Format line breaks
+    formatted = formatted.replace(/\n\n/g, '<br><br>'); // Double newline
+    formatted = formatted.replace(/\n/g, '<br>'); // Single newline
     
+    // 7. Pembersihan akhir
+    // Hapus multiple <br> berlebihan
     formatted = formatted.replace(/(<br>){3,}/g, '<br><br>');
     
+    // Bersihkan awal dan akhir
     formatted = formatted.replace(/^(<br>)+/, '');
     formatted = formatted.replace(/(<br>)+$/, '');
     
+    // Fix spacing around formulas
     formatted = formatted.replace(/\s*<span class="formula">/g, ' <span class="formula">');
     formatted = formatted.replace(/<\/span>\s*/g, '</span> ');
     
@@ -114,35 +135,13 @@ if (GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE') {
         console.error("Error inisialisasi Gemini AI:", error);
     }
 } else {
-    console.log("API key Gemini belum diset atau tidak valid:", GEMINI_API_KEY);
+    console.warn("GEMINI_API_KEY tidak ditemukan atau tidak valid. Chatbot tidak akan berfungsi.");
 }
-const authMiddleware = (req, res, next) => {
-    const authHeader = req.header('Authorization');
 
-    if (!authHeader) {
-        return res.status(401).json({ message: 'Akses ditolak. Tidak ada token.' });
-    }
+// Middleware
+app.use(express.json());
 
-    try {
-        const token = authHeader.split(' ')[1];
-
-        const decoded = jwt.verify(token, JWT_SECRET);
-
-        req.user = decoded.user;
-
-        next();
-    } catch (error) {
-        res.status(401).json({ message: 'Token tidak valid.' });
-    }
-};
-
-const fs = require('fs');
-const path = require('path');
-
-const app = express();
-// Port configuration untuk deployment
-const PORT = process.env.PORT || 3000;
-
+// CORS Middleware untuk Vercel
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -155,26 +154,182 @@ app.use((req, res, next) => {
     }
 });
 
-app.use(express.json());
-app.use(express.static(__dirname)); 
+// MongoDB Connection
+// MongoDB Connection String dari environment variable atau fallback ke MongoDB Atlas yang valid
+const connectionString = process.env.MONGODB_URI || "mongodb+srv://user_lab:user_lab_098@cluster0.rq2wgnh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
-const dataFilePath = path.join(__dirname, 'data.json');
+let isConnected = false;
 
-// MongoDB Connection String dari environment variable atau fallback ke local
-const connectionString = process.env.MONGODB_URI || "mongodb+srv://user_lab:user_lab_098@cluster-lab-virtual.chof9bt.mongodb.net/?retryWrites=true&w=majority&appName=cluster-lab-virtual";
+const connectToDatabase = async () => {
+    if (isConnected) {
+        return;
+    }
+    
+    try {
+        console.log('=== CONNECTING TO MONGODB ===');
+        console.log('Connection string preview:', connectionString.substring(0, 30) + '...');
+        
+        await mongoose.connect(connectionString, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        isConnected = true;
+        console.log("✅ Berhasil terhubung ke MongoDB Atlas!");
+    } catch (error) {
+        console.error("❌ Koneksi database gagal:", error.message);
+        console.error("Full error:", error);
+        throw error;
+    }
+};
 
-mongoose.connect(connectionString)
-  .then(() => {
-    console.log("Berhasil terhubung ke MongoDB Atlas!");
-  })
-  .catch((error) => {
-    console.error("Koneksi database gagal:", error);
-  });
+// Auth Middleware
+const authMiddleware = (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ message: 'Token tidak ditemukan atau format salah.' });
+        }
+
+        const token = authHeader.substring(7); // Hapus "Bearer " dari awal
+        
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded; // Simpan data user dari token ke req.user
+        next();
+    } catch (error) {
+        console.error('ERROR AUTH MIDDLEWARE:', error);
+        return res.status(401).json({ message: 'Token tidak valid atau telah kedaluwarsa.' });
+    }
+};
+
+// Routes
+app.get('/api', (req, res) => {
+    res.json({ message: 'Virtual Lab API is running on Vercel!' });
+});
+
+// Debug endpoint untuk cek environment variables
+app.get('/api/debug', (req, res) => {
+    res.json({
+        nodeEnv: process.env.NODE_ENV,
+        hasGeminiKey: !!process.env.GEMINI_API_KEY,
+        hasMongoUri: !!process.env.MONGODB_URI,
+        hasJwtSecret: !!process.env.JWT_SECRET,
+        mongoUriPreview: process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 20) + '...' : 'NOT SET'
+    });
+});
+
+// Test endpoint tanpa auth untuk debugging
+app.get('/api/test', async (req, res) => {
+    try {
+        await connectToDatabase();
+        
+        res.json({
+            status: 'success',
+            message: 'API dan Database berfungsi normal',
+            timestamp: new Date().toISOString(),
+            mongodb: isConnected ? 'connected' : 'disconnected',
+            environment: process.env.NODE_ENV || 'development'
+        });
+    } catch (error) {
+        console.error('=== TEST ENDPOINT ERROR ===');
+        console.error(error);
+        
+        res.status(500).json({
+            status: 'error',
+            message: 'Database connection failed',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// Auth Routes
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        await connectToDatabase();
+        
+        const { username, password } = req.body;
+        
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username sudah digunakan.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 12);
+        
+        const newUser = new User({
+            username,
+            password: hashedPassword
+        });
+
+        await newUser.save();
+        
+        const token = jwt.sign(
+            { id: newUser._id, username: newUser.username },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(201).json({
+            message: 'Registrasi berhasil!',
+            token,
+            user: {
+                id: newUser._id,
+                username: newUser.username
+            }
+        });
+
+    } catch (error) {
+        console.error("ERROR REGISTRASI:", error);
+        res.status(500).json({ message: "Terjadi kesalahan pada server." });
+    }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        await connectToDatabase();
+        
+        const { username, password } = req.body;
+
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(400).json({ message: 'Username atau password salah.' });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ message: 'Username atau password salah.' });
+        }
+
+        const token = jwt.sign(
+            { id: user._id, username: user.username },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            message: 'Login berhasil!',
+            token,
+            user: {
+                id: user._id,
+                username: user.username
+            }
+        });
+
+    } catch (error) {
+        console.error("ERROR LOGIN:", error);
+        res.status(500).json({ message: "Terjadi kesalahan pada server." });
+    }
+});
+
+// History Routes
 app.get('/api/history', authMiddleware, async (req, res) => {
     try {
+        await connectToDatabase();
+        
         const userHistory = await Simulation.find({ user: req.user.id })
-            .sort({ timestamp: -1 }) 
-            .limit(10); 
+            .sort({ timestamp: -1 })
+            .limit(10);
 
         res.json(userHistory);
     } catch (error) {
@@ -183,77 +338,110 @@ app.get('/api/history', authMiddleware, async (req, res) => {
     }
 });
 
-app.delete('/api/history/:id', authMiddleware, async (req, res) => {
+app.post('/api/simulation', authMiddleware, async (req, res) => {
     try {
-        const simulationId = req.params.id;
-        const userId = req.user.id;
+        await connectToDatabase();
+        
+        const { velocity, angle, height, range, time } = req.body;
+        
+        const newSimulation = new Simulation({
+            user: req.user.id,
+            velocity,
+            angle,
+            height,
+            range,
+            time
+        });
 
-        const simulation = await Simulation.findById(simulationId);
-
-        if (!simulation) {
-            return res.status(404).json({ message: 'Riwayat tidak ditemukan.' });
-        }
-
-        if (simulation.user.toString() !== userId) {
-            return res.status(403).json({ message: 'Akses ditolak. Anda tidak memiliki izin.' });
-        }
-
-        await Simulation.findByIdAndDelete(simulationId);
-
-        res.json({ message: 'Riwayat berhasil dihapus.' });
+        await newSimulation.save();
+        
+        res.status(201).json({
+            message: 'Simulasi berhasil disimpan!',
+            simulation: newSimulation
+        });
 
     } catch (error) {
-        console.error("ERROR SAAT MENGHAPUS RIWAYAT:", error);
-        res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
+        console.error("ERROR SAAT MENYIMPAN SIMULASI:", error);
+        res.status(500).json({ message: "Terjadi kesalahan pada server." });
     }
 });
 
-app.delete('/api/history', authMiddleware, async (req, res) => {
+// Score Routes
+app.get('/api/scores/best', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user.id;
-
-        await Simulation.deleteMany({ user: userId });
-
-        res.json({ message: 'Semua riwayat berhasil dihapus.' });
-
+        await connectToDatabase();
+        
+        const bestScore = await Score.findOne({ user: req.user.id });
+        
+        if (!bestScore) {
+            return res.json({ bestScore: 0 });
+        }
+        
+        res.json({ bestScore: bestScore.bestScore });
     } catch (error) {
-        console.error("ERROR SAAT MENGHAPUS SEMUA RIWAYAT:", error);
-        res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
+        console.error("ERROR SAAT MENGAMBIL BEST SCORE:", error);
+        res.status(500).json({ message: "Terjadi kesalahan pada server." });
     }
 });
 
+app.post('/api/scores', authMiddleware, async (req, res) => {
+    try {
+        await connectToDatabase();
+        
+        const { score } = req.body;
+        
+        let userScore = await Score.findOne({ user: req.user.id });
+        
+        if (!userScore) {
+            userScore = new Score({
+                user: req.user.id,
+                bestScore: score
+            });
+        } else if (score > userScore.bestScore) {
+            userScore.bestScore = score;
+        }
+        
+        await userScore.save();
+        
+        res.json({
+            message: 'Skor berhasil disimpan!',
+            bestScore: userScore.bestScore,
+            isNewRecord: !userScore || score > userScore.bestScore
+        });
+    } catch (error) {
+        console.error("ERROR SAAT MENYIMPAN SCORE:", error);
+        res.status(500).json({ message: "Terjadi kesalahan pada server." });
+    }
+});
+
+// Chatbot Route
 app.post('/api/chatbot', authMiddleware, async (req, res) => {
     try {
-        const { message } = req.body;
+        await connectToDatabase();
         
-        console.log('=== CHATBOT REQUEST RECEIVED ===');
-        console.log('User:', req.user.username);
-        console.log('Message:', message);
-        
-        if (!message || message.trim().length === 0) {
-            return res.status(400).json({ error: 'Pesan tidak boleh kosong.' });
-        }
-
         if (!model) {
-            console.log('Model not initialized');
-            return res.json({ 
-                response: 'Maaf, chatbot belum dikonfigurasi dengan benar. Silakan hubungi administrator untuk mengatur API key Gemini.' 
+            return res.status(503).json({ 
+                error: 'Chatbot tidak tersedia',
+                response: 'Maaf, layanan chatbot sedang tidak tersedia. Silakan coba lagi nanti.'
             });
         }
 
-        console.log('Sending to Gemini AI...');
+        const { message } = req.body;
+        
+        if (!message || message.trim() === '') {
+            return res.status(400).json({ 
+                error: 'Pesan tidak boleh kosong',
+                response: 'Silakan masukkan pertanyaan Anda.'
+            });
+        }
 
         const fullPrompt = `${systemInstruction}\n\nPertanyaan pengguna: ${message}\n\nJawaban:`;
 
         const result = await model.generateContent(fullPrompt);
-        const response = await result.response;
-        const rawText = response.text();
-
+        const rawText = result.response.text();
+        
         const formattedText = formatGeminiResponse(rawText);
-
-        console.log('Gemini response received:', rawText.substring(0, 100) + '...');
-        console.log('Formatted response:', formattedText.substring(0, 100) + '...');
-
+        
         res.json({ response: formattedText });
 
     } catch (error) {
@@ -268,99 +456,31 @@ app.post('/api/chatbot', authMiddleware, async (req, res) => {
     }
 });
 
-app.post('/api/auth/register', async (req, res) => {
-    console.log('=== REGISTER REQUEST RECEIVED ===');
-    console.log('Request body:', req.body);
-    console.log('Request headers:', req.headers);
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error('=== GLOBAL ERROR HANDLER ===');
+    console.error('Error:', err.message);
+    console.error('Stack:', err.stack);
     
-    try {
-        const { username, password } = req.body;
-
-        console.log('Extracted username:', username);
-        console.log('Extracted password length:', password ? password.length : 'undefined');
-
-        const existingUser = await User.findOne({ username: username });
-        if (existingUser) {
-            console.log('User already exists:', username);
-            return res.status(400).json({ message: "Username sudah digunakan." });
-        }
-
-        const newUser = new User({
-            username: username,
-            password: password 
-        });
-        await newUser.save();
-        console.log('New user created successfully:', username);
-
-        res.status(201).json({ message: "Pengguna berhasil terdaftar!" });
-
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ message: "Terjadi kesalahan pada server.", error: error });
-    }
+    res.status(500).json({
+        error: 'Internal Server Error',
+        message: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
 });
 
-// [POST] /api/auth/login
-// Tugas: Memverifikasi kredensial dan memberikan JWT jika berhasil.
-app.post('/api/auth/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-
-        const user = await User.findOne({ username: username });
-        if (!user) {
-            return res.status(400).json({ message: "Username atau password salah." });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: "Username atau password salah." });
-        }
-
-        const payload = {
-            user: {
-                id: user.id, 
-                username: user.username
-            }
-        };
-
-        jwt.sign(
-            payload,
-            JWT_SECRET,
-            { expiresIn: '1h' },
-            (err, token) => {
-                if (err) throw err;
-                res.json({ token: token });
-            }
-        );
-
-    } catch (error) {
-        console.error("ERROR SAAT LOGIN:", error);
-        res.status(500).json({ message: "Terjadi kesalahan pada server.", error: error });
-    }
+// 404 handler
+app.use((req, res) => {
+    console.log('=== 404 NOT FOUND ===');
+    console.log('Path:', req.path);
+    console.log('Method:', req.method);
+    
+    res.status(404).json({
+        error: 'Not Found',
+        path: req.path,
+        method: req.method
+    });
 });
 
-app.post('/api/save', authMiddleware, async (req, res) => {
-    try {
-        const { angle, velocity, distance, height } = req.body;
-
-        const newSimulation = new Simulation({
-            angle,
-            velocity,
-            distance,
-            height,
-            user: req.user.id 
-        });
-
-        await newSimulation.save();
-
-        res.status(201).json({ message: "Hasil simulasi berhasil disimpan!" });
-    } catch (error) {
-        console.error("ERROR SAAT MENYIMPAN SIMULASI:", error);
-        res.status(500).json({ message: "Terjadi kesalahan pada server." });
-    }
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server berjalan di port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// Export untuk Vercel
+module.exports = app;
