@@ -338,6 +338,38 @@ app.get('/api/history', authMiddleware, async (req, res) => {
     }
 });
 
+// DELETE history endpoint - yang hilang!
+app.delete('/api/history/:id', authMiddleware, async (req, res) => {
+    try {
+        await connectToDatabase();
+        
+        const simulationId = req.params.id;
+        const userId = req.user.id;
+
+        // Cari simulasi berdasarkan ID-nya
+        const simulation = await Simulation.findById(simulationId);
+
+        // Jika tidak ditemukan, kirim error
+        if (!simulation) {
+            return res.status(404).json({ message: 'Riwayat tidak ditemukan.' });
+        }
+
+        // PENTING: Pastikan pengguna hanya bisa menghapus riwayat miliknya sendiri
+        if (simulation.user.toString() !== userId) {
+            return res.status(403).json({ message: 'Akses ditolak. Anda tidak memiliki izin.' });
+        }
+
+        // Hapus simulasi dari database
+        await Simulation.findByIdAndDelete(simulationId);
+
+        res.json({ message: 'Riwayat berhasil dihapus.' });
+
+    } catch (error) {
+        console.error("ERROR SAAT MENGHAPUS RIWAYAT:", error);
+        res.status(500).json({ message: "Terjadi kesalahan pada server." });
+    }
+});
+
 app.post('/api/simulation', authMiddleware, async (req, res) => {
     try {
         await connectToDatabase();
