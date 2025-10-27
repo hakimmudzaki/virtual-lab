@@ -2,39 +2,12 @@
 // File ini memastikan Vercel bisa mendeteksi project dengan benar
 
 module.exports = {
-  name: 'virtual-lab',
-  version: '1.0.0',
-  description: 'Virtual Physics Lab - Projectile Motion Simulator'
+    name: 'virtual-lab',
+    version: '1.0.0',
+    description: 'Virtual Physics Lab - Projectile Motion Simulator'
 };
-// Vercel Serverless Function Handler
-const express = require('express');
-const path = require('path');
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-require('dotenv').config();
 
-// Import models
-const User = require('./models/User');
-const Simulation = require('./models/Simulation');
-const Score = require('./models/Score');
-
-const app = express();
-
-// Serve static files from the public directory so Vercel (or local server)
-// can return HTML pages like index.html and login.html when this function
-// handles root requests.
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Ensure root path serves the main index.html
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Environment variables
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
-const JWT_SECRET = process.env.JWT_SECRET || 'kunci-rahasia-ini-sangat-aman-dan-harus-diganti';
+// Note: API server moved to `api/index.js` so Vercel can serve static files from `public/`.
 
 // System instruction untuk AI
 const systemInstruction = `
