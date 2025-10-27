@@ -8,6 +8,7 @@ module.exports = {
 };
 // Vercel Serverless Function Handler
 const express = require('express');
+const path = require('path');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -20,6 +21,16 @@ const Simulation = require('./models/Simulation');
 const Score = require('./models/Score');
 
 const app = express();
+
+// Serve static files from the public directory so Vercel (or local server)
+// can return HTML pages like index.html and login.html when this function
+// handles root requests.
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Ensure root path serves the main index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Environment variables
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
@@ -524,3 +535,12 @@ app.use((req, res) => {
 
 // Export untuk Vercel
 module.exports = app;
+
+// If this file is run directly (for local testing), start a small HTTP server.
+// Vercel will ignore this and only use the exported `app` as a serverless handler.
+if (require.main === module) {
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+        console.log(`Server running for local testing on http://localhost:${port}`);
+    });
+}
