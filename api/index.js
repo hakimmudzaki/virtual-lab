@@ -45,6 +45,68 @@ if (GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE') {
     }
 }
 
+// === System instruction dan formatter untuk memastikan keluaran tertata ===
+const systemInstruction = `
+Anda adalah tutor fisika yang ramah untuk sebuah web pembelajaran.
+Topik keahlian Anda hanya dan secara eksklusif adalah gerak parabola.
+Jangan pernah menjawab pertanyaan tentang subjek lain, termasuk topik fisika lainnya, sejarah, biologi, atau pertanyaan umum.
+Jika pengguna bertanya di luar topik, Anda wajib menolak dengan sopan dan mengarahkan kembali percakapan ke gerak parabola.
+
+ATURAN FORMAT JAWABAN YANG WAJIB DIIKUTI:
+1. Gunakan paragraf pendek dan jelas (maksimal 2-3 kalimat per paragraf)
+2. Pisahkan setiap poin dengan bullet points menggunakan tanda • (bukan *)
+3. Gunakan **teks tebal** untuk konsep penting (gunakan ** bukan *)
+4. Untuk rumus matematika, gunakan format: v₀ (bukan v_0), θ (bukan \\theta), g = 9.8 m/s²
+5. Jangan gunakan tanda * berlebihan atau formatting LaTeX yang rumit
+6. Berikan contoh nyata yang mudah dipahami
+7. Hindari penggunaan tanda bintang (*) kecuali untuk membuat teks tebal dengan **
+`;
+
+function formatGeminiResponse(text) {
+    let formatted = (text || '').trim();
+
+    // 1. Hapus triple asterisks dan asterisk berlebih
+        formatted = formatted.replace(/\*{3,}/g, '');
+    // ubah double-asterisk ke <strong>
+    formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    // ubah single *...* (yang sering dipakai) jadi bold juga, hati-hati dengan false-positive
+    formatted = formatted.replace(/\*([^*]+)\*(?!\*)/g, '<strong>$1</strong>');
+
+    // 2. Simple LaTeX -> unicode conversions
+    formatted = formatted.replace(/\\theta/g, 'θ');
+    formatted = formatted.replace(/\\sin/g, 'sin');
+    formatted = formatted.replace(/\\cos/g, 'cos');
+    formatted = formatted.replace(/\\tan/g, 'tan');
+    formatted = formatted.replace(/\\cdot/g, '·');
+
+    // 3. Fractions -> readable inline
+    formatted = formatted.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)');
+
+    // 4. Subscripts / superscripts
+    formatted = formatted.replace(/([a-zA-Z])_\{([^}]+)\}/g, '$1<sub>$2</sub>');
+    formatted = formatted.replace(/([a-zA-Z])_([a-zA-Z0-9])/g, '$1<sub>$2</sub>');
+    formatted = formatted.replace(/\^\{([^}]+)\}/g, '<sup>$1</sup>');
+    formatted = formatted.replace(/\^([0-9]+)/g, '<sup>$1</sup>');
+
+    // 5. Bullets and headers
+    formatted = formatted.replace(/\n\s*•\s*/g, '<br>• ');
+    formatted = formatted.replace(/\n\n/g, '<br><br>');
+    formatted = formatted.replace(/\n/g, '<br>');
+
+    formatted = formatted.replace(/(^|<br>)([A-Za-z\s]+):/g, '$1<strong>$2:</strong>');
+
+    // 6. cleanup
+    formatted = formatted.replace(/(<br>){3,}/g, '<br><br>');
+    formatted = formatted.replace(/^<br>+/, '');
+    formatted = formatted.replace(/<br>+$/, '');
+
+    return formatted.trim();
+}
+
+// Safety limits when model ignores constraints
+const MAX_RESPONSE_CHARS = 2000; // batas aman sebelum dipotong
+
+
 // MongoDB Connection
 const connectionString = process.env.MONGODB_URI || "mongodb+srv://user_lab:user_lab_098@cluster0.rq2wgnh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 let isConnected = false;
@@ -90,9 +152,11 @@ app.post('/api/auth/register', async (req, res) => {
         const { username, password } = req.body;
         const existingUser = await User.findOne({ username });
         if (existingUser) return res.status(400).json({ message: 'Username sudah digunakan.' });
-        const hashedPassword = await bcrypt.hash(password, 12);
-        const newUser = new User({ username, password: hashedPassword });
+
+        // Let the Mongoose pre('save') hook handle hashing the password.
+        const newUser = new User({ username, password });
         await newUser.save();
+
         const token = jwt.sign({ id: newUser._id, username: newUser.username }, JWT_SECRET, { expiresIn: '24h' });
         res.status(201).json({ message: 'Registrasi berhasil!', token, user: { id: newUser._id, username: newUser.username } });
     } catch (error) {
@@ -126,8 +190,45 @@ app.delete('/api/history/:id', authMiddleware, async (req, res) => {
     try { await connectToDatabase(); const simulation = await Simulation.findById(req.params.id); if (!simulation) return res.status(404).json({ message: 'Riwayat tidak ditemukan.' }); if (simulation.user.toString() !== req.user.id) return res.status(403).json({ message: 'Akses ditolak.' }); await Simulation.findByIdAndDelete(req.params.id); res.json({ message: 'Riwayat berhasil dihapus.' }); } catch (error) { console.error(error); res.status(500).json({ message: 'Terjadi kesalahan pada server.' }); }
 });
 
+// DELETE all history for the authenticated user
+app.delete('/api/history', authMiddleware, async (req, res) => {
+    try {
+        await connectToDatabase();
+        const userId = req.user.id;
+        // Remove all simulations belonging to the user
+        const result = await Simulation.deleteMany({ user: userId });
+        res.json({ message: 'Semua riwayat berhasil dihapus.', deletedCount: result.deletedCount });
+    } catch (error) {
+        console.error('ERROR DELETE ALL HISTORY:', error);
+        res.status(500).json({ message: 'Terjadi kesalahan saat menghapus riwayat.' });
+    }
+});
+
 app.post('/api/simulation', authMiddleware, async (req, res) => {
-    try { await connectToDatabase(); const { velocity, angle, height, range, time } = req.body; const newSimulation = new Simulation({ user: req.user.id, velocity, angle, height, range, time }); await newSimulation.save(); res.status(201).json({ message: 'Simulasi berhasil disimpan!', simulation: newSimulation }); } catch (error) { console.error(error); res.status(500).json({ message: 'Terjadi kesalahan pada server.' }); }
+    try {
+        await connectToDatabase();
+        // Expecting distance (range) as `distance` from the client
+        const { velocity, angle, height, distance } = req.body;
+
+        // Validate required fields
+        if (typeof velocity !== 'number' || typeof angle !== 'number' || typeof height !== 'number' || typeof distance !== 'number') {
+            return res.status(400).json({ message: 'Data simulasi tidak lengkap atau salah format.' });
+        }
+
+        const newSimulation = new Simulation({
+            user: req.user.id,
+            velocity,
+            angle,
+            distance,
+            height
+        });
+
+        await newSimulation.save();
+        res.status(201).json({ message: 'Simulasi berhasil disimpan!', simulation: newSimulation });
+    } catch (error) {
+        console.error('ERROR SIMULATION SAVE:', error);
+        res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
+    }
 });
 
 app.get('/api/scores/best', authMiddleware, async (req, res) => {
@@ -139,7 +240,37 @@ app.post('/api/scores', authMiddleware, async (req, res) => {
 });
 
 app.post('/api/chatbot', authMiddleware, async (req, res) => {
-    try { await connectToDatabase(); if (!model) return res.status(503).json({ error: 'Chatbot tidak tersedia', response: 'Maaf, layanan chatbot sedang tidak tersedia.' }); const { message } = req.body; if (!message || message.trim() === '') return res.status(400).json({ error: 'Pesan tidak boleh kosong', response: 'Silakan masukkan pertanyaan Anda.' }); const fullPrompt = `Pertanyaan pengguna: ${message}`; const result = await model.generateContent(fullPrompt); const rawText = result.response.text(); res.json({ response: rawText }); } catch (error) { console.error(error); res.status(500).json({ error: 'Terjadi kesalahan pada chatbot.' }); }
+    try {
+        await connectToDatabase();
+
+        if (!model) return res.status(503).json({ error: 'Chatbot tidak tersedia', response: 'Maaf, layanan chatbot sedang tidak tersedia.' });
+
+        const { message } = req.body;
+        if (!message || message.trim() === '') return res.status(400).json({ error: 'Pesan tidak boleh kosong', response: 'Silakan masukkan pertanyaan Anda.' });
+
+        // Gabungkan system instruction yang ketat dengan prompt pengguna
+        const fullPrompt = `${systemInstruction}\n\nPertanyaan pengguna: ${message}\n\nJawaban:`;
+
+        // Panggil model — tetap gunakan cara panggilan lama untuk kompatibilitas
+        const result = await model.generateContent(fullPrompt);
+        const rawText = (result && result.response && typeof result.response.text === 'function') ? result.response.text() : String(result);
+
+        // Format hasil untuk mengikuti aturan tampilan yang kita definisikan
+        let formatted = formatGeminiResponse(rawText || '');
+
+        // Jika model mengabaikan batas, potong hasil agar UI tetap rapi
+        let truncated = false;
+        if (formatted.length > MAX_RESPONSE_CHARS) {
+            formatted = formatted.slice(0, MAX_RESPONSE_CHARS - 100) + '\n\n... (jawaban dipersingkat)';
+            truncated = true;
+        }
+
+        res.json({ response: formatted, truncated });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Terjadi kesalahan pada chatbot.' });
+    }
+    // });
 });
 
 // Global error and 404

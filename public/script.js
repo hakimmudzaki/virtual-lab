@@ -9,7 +9,8 @@ if (!token) {
 } else {
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        document.getElementById('usernameDisplay').textContent = payload.user.username;
+        // JWT payload contains `username` at the top level (see server: jwt.sign({ id, username }))
+        document.getElementById('usernameDisplay').textContent = payload.username || payload.user?.username || '';
         document.getElementById('userInfo').style.display = 'block';
     } catch (e) {
         console.error("Token tidak valid:", e);
