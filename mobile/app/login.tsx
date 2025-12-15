@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,14 +15,39 @@ import { router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/context/AuthContext';
 import { COLORS } from '../src/constants';
+import { useGoogleAuth } from '../src/services/googleAuth';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
   const { login, googleLogin } = useAuth();
+  const { signInWithGoogle, isReady, response } = useGoogleAuth();
+
+  // Handle Google Auth response
+  useEffect(() => {
+    if (response?.type === 'success') {
+      handleGoogleSuccess();
+    }
+  }, [response]);
+
+  const handleGoogleSuccess = async () => {
+    try {
+      setIsGoogleLoading(true);
+      const result = await signInWithGoogle();
+      if (result) {
+        await googleLogin(result.user);
+        router.replace('/(tabs)/simulation');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Gagal login dengan Google');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -42,25 +67,23 @@ export default function LoginScreen() {
   };
 
   const handleGoogleLogin = async () => {
-    // Untuk Google login di React Native, Anda perlu setup Firebase Auth
-    // Ini adalah placeholder - implementasi sebenarnya memerlukan Firebase config
-    Alert.alert(
-      'Info',
-      'Google Login memerlukan konfigurasi Firebase. Silakan setup Firebase Auth terlebih dahulu.',
-      [{ text: 'OK' }]
-    );
+    if (!isReady) {
+      Alert.alert('Info', 'Google Sign-In sedang memuat...');
+      return;
+    }
     
-    // Contoh implementasi dengan Firebase:
-    // try {
-    //   await GoogleSignin.hasPlayServices();
-    //   const { idToken } = await GoogleSignin.signIn();
-    //   const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-    //   const userCredential = await auth().signInWithCredential(googleCredential);
-    //   await googleLogin(userCredential.user);
-    //   router.replace('/(tabs)/simulation');
-    // } catch (error) {
-    //   console.error(error);
-    // }
+    try {
+      setIsGoogleLoading(true);
+      const result = await signInWithGoogle();
+      if (result) {
+        await googleLogin(result.user);
+        router.replace('/(tabs)/simulation');
+      }
+    } catch (error: any) {
+      Alert.alert('Login Gagal', error.message || 'Terjadi kesalahan saat login dengan Google.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   return (
@@ -136,11 +159,18 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity 
-            style={styles.googleButton}
+            style={[styles.googleButton, isGoogleLoading && styles.buttonDisabled]}
             onPress={handleGoogleLogin}
+            disabled={isGoogleLoading || !isReady}
           >
-            <Ionicons name="logo-google" size={24} color="#4285F4" />
-            <Text style={styles.googleButtonText}>Login dengan Google</Text>
+            {isGoogleLoading ? (
+              <ActivityIndicator color="#4285F4" />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={24} color="#4285F4" />
+                <Text style={styles.googleButtonText}>Login dengan Google</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           <View style={styles.footer}>
