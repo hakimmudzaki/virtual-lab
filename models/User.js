@@ -11,7 +11,28 @@ const UserSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true // Wajib diisi
+        required: false // Optional untuk user Firebase/Google login
+    },
+    email: {
+        type: String,
+        required: false,
+        unique: true,
+        sparse: true // Mengizinkan multiple null values
+    },
+    firebaseUid: {
+        type: String,
+        required: false,
+        unique: true,
+        sparse: true // Untuk user yang login via Firebase/Google
+    },
+    authProvider: {
+        type: String,
+        enum: ['local', 'google'],
+        default: 'local'
+    },
+    photoURL: {
+        type: String,
+        required: false
     }
 });
 

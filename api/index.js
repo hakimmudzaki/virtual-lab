@@ -171,12 +171,86 @@ app.post('/api/auth/login', async (req, res) => {
         const { username, password } = req.body;
         const user = await User.findOne({ username });
         if (!user) return res.status(400).json({ message: 'Username atau password salah.' });
+        
+        // Jika user menggunakan Google login, tidak bisa login dengan password
+        if (user.authProvider === 'google' && !user.password) {
+            return res.status(400).json({ message: 'Akun ini terdaftar dengan Google. Silakan login dengan Google.' });
+        }
+        
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) return res.status(400).json({ message: 'Username atau password salah.' });
         const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
         res.json({ message: 'Login berhasil!', token, user: { id: user._id, username: user.username } });
     } catch (error) {
         console.error('ERROR LOGIN:', error);
+        res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
+    }
+});
+
+// Google/Firebase Authentication
+app.post('/api/auth/google', async (req, res) => {
+    try {
+        await connectToDatabase();
+        const { firebaseUid, email, displayName, photoURL } = req.body;
+        
+        if (!firebaseUid || !email) {
+            return res.status(400).json({ message: 'Data Firebase tidak lengkap.' });
+        }
+        
+        // Cari user berdasarkan firebaseUid atau email
+        let user = await User.findOne({ 
+            $or: [{ firebaseUid }, { email }] 
+        });
+        
+        if (user) {
+            // Update user yang sudah ada
+            user.firebaseUid = firebaseUid;
+            user.email = email;
+            user.photoURL = photoURL;
+            user.authProvider = 'google';
+            if (displayName && !user.username.includes('@')) {
+                // Jangan update username jika sudah custom
+            }
+            await user.save();
+        } else {
+            // Buat user baru
+            // Generate username unik dari displayName atau email
+            let username = displayName ? displayName.replace(/\s+/g, '_').toLowerCase() : email.split('@')[0];
+            
+            // Cek apakah username sudah ada
+            const existingUser = await User.findOne({ username });
+            if (existingUser) {
+                username = `${username}_${Date.now().toString(36)}`;
+            }
+            
+            user = new User({
+                username,
+                email,
+                firebaseUid,
+                photoURL,
+                authProvider: 'google'
+            });
+            await user.save();
+        }
+        
+        const token = jwt.sign(
+            { id: user._id, username: user.username }, 
+            JWT_SECRET, 
+            { expiresIn: '24h' }
+        );
+        
+        res.json({ 
+            message: 'Login Google berhasil!', 
+            token, 
+            user: { 
+                id: user._id, 
+                username: user.username,
+                email: user.email,
+                photoURL: user.photoURL
+            } 
+        });
+    } catch (error) {
+        console.error('ERROR GOOGLE AUTH:', error);
         res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
     }
 });
