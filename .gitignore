@@ -47,3 +47,13 @@ temp/
 # Vercel
 .vercel
 *.vercel.json
+
+# React Native / Expo (mobile folder)
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/android/
+mobile/ios/
+*.apk
+*.aab
+*.ipa

@@ -1,0 +1,10 @@
+{
+  "name": "virtual-lab-assets",
+  "description": "Placeholder - Ganti dengan icon dan splash screen yang sebenarnya",
+  "files": {
+    "icon.png": "1024x1024 px - App icon",
+    "splash.png": "1284x2778 px - Splash screen",
+    "adaptive-icon.png": "1024x1024 px - Android adaptive icon foreground",
+    "favicon.png": "48x48 px - Web favicon"
+  }
+}
