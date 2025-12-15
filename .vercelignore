@@ -7,3 +7,9 @@ node_modules
 *.log
 DEPLOYMENT.md
 README.md
+
+# Mobile App (React Native / Expo) - tidak di-deploy ke Vercel
+mobile/
+
+# Scripts folder (testing only)
+scripts/
