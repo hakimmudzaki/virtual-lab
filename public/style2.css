@@ -249,6 +249,18 @@ a.nav-btn,
     color: var(--text-color);
 }
 
+
+.result-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* PENTING: Memastikan tombol sejajar vertikal */
+    gap: 20px;
+    width: 100%;
+    margin-top: 30px;
+}
+
 #retryBtn {
-    margin-top: 0;
+    margin-top: 0 !important; /* !important memaksa margin menjadi 0 */
+    margin-bottom: 0 !important;
+    margin: 0 !important; /* Reset semua sisi margin */
 }
