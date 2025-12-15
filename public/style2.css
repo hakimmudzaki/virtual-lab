@@ -180,11 +180,7 @@ h1 {
     flex-wrap: wrap;
 }
 
-.result-buttons .nav-btn {
-    flex: 1;
-    max-width: 200px;
-    min-width: 180px;
-}
+
 
 /* Style untuk link yang tampil seperti tombol */
 a.nav-btn,
