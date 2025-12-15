@@ -181,9 +181,8 @@ h1 {
 }
 
 .result-buttons .nav-btn {
-    flex: 1;
-    max-width: 200px;
-    min-width: 180px;
+    width: 200px;
+    padding: 12px 20px;
 }
 
 /* Style untuk link yang tampil seperti tombol */
