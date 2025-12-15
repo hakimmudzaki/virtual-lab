@@ -174,17 +174,18 @@ h1 {
 
 .result-buttons {
     display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-top: 2rem;
-    flex-wrap: wrap;
+    justify-content: center; /* Menengahkan tombol */
+    gap: 1rem; /* Jarak antar tombol */
+    width: 100%; /* Pastikan container lebar penuh */
 }
 
 .result-buttons .nav-btn {
-    width: 200px;
-    padding: 12px 20px;
+    flex: 1; /* Memaksa kedua tombol mengambil porsi lebar yang sama */
+    text-align: center; /* Memastikan teks di tengah */
+    display: flex; /* Membantu alignment vertikal di dalam tombol */
+    justify-content: center;
+    align-items: center;
 }
-
 /* Style untuk link yang tampil seperti tombol */
 a.nav-btn,
 .nav-btn-link {
