@@ -1,6 +1,6 @@
 // Constants for the app
 export const API_URL = __DEV__ 
-  ? 'http://192.168.1.100:3000' // Ganti dengan IP lokal Anda untuk development
+  ? 'http://192.168.56.1:3000' // Ganti dengan IP lokal Anda untuk development
   : 'https://virtual-lab-your-vercel.vercel.app'; // Ganti dengan URL Vercel Anda
 
 export const COLORS = {

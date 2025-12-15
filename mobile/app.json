@@ -16,16 +16,14 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourname.virtuallabmobile",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "bundleIdentifier": "com.yourname.virtuallabmobile"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a0e27"
       },
-      "package": "com.yourname.virtuallabmobile",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.yourname.virtuallabmobile"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -33,17 +31,7 @@
     },
     "scheme": "virtuallabmobile",
     "plugins": [
-      "expo-router",
-      "@react-native-firebase/app",
-      "@react-native-firebase/auth",
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "useFrameworks": "static"
-          }
-        }
-      ]
+      "expo-router"
     ],
     "extra": {
       "router": {
