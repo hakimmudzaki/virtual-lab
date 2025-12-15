@@ -132,6 +132,7 @@ h1 {
     border-top: 2px solid var(--border-color);
 }
 
+/* --- PERBAIKAN CLASS NAV-BTN --- */
 .nav-btn {
     background-color: var(--primary-accent);
     color: white;
@@ -141,9 +142,16 @@ h1 {
     font-size: 1rem;
     font-weight: 700;
     font-family: var(--font-heading);
-    text-decoration: none;
+    text-decoration: none; /* Perbaikan dari t.navext... */
     cursor: pointer;
     transition: background-color 0.3s, transform 0.2s;
+    
+    /* Tambahan penting untuk keseragaman */
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    line-height: normal;
 }
 
 .nav-btn:hover:not(:disabled) {
@@ -167,24 +175,50 @@ h1 {
     color: var(--text-color);
 }
 
-/* Style untuk halaman hasil */
+/* --- PERBAIKAN BAGIAN HASIL KUIS --- */
 .result-page {
     text-align: center;
 }
 
 .result-buttons {
     display: flex;
-    justify-content: center; /* Menengahkan tombol */
-    gap: 1rem; /* Jarak antar tombol */
-    width: 100%; /* Pastikan container lebar penuh */
+    justify-content: center;
+    gap: 20px;       /* Jarak antar tombol */
+    width: 100%;
+    margin-top: 30px;
+    flex-wrap: wrap; /* Jaga-jaga jika layar sangat kecil */
 }
 
+/* Memaksa tombol di dalam result page memiliki ukuran identik */
 .result-buttons .nav-btn {
-    flex: 1; /* Memaksa kedua tombol mengambil porsi lebar yang sama */
-    text-align: center; /* Memastikan teks di tengah */
-    display: flex; /* Membantu alignment vertikal di dalam tombol */
-    justify-content: center;
-    align-items: center;
+    width: 200px;    /* Lebar pasti */
+    height: 50px;    /* Tinggi pasti */
+    padding: 0;      /* Reset padding agar height akurat */
+    margin: 0;       /* Reset margin */
+    flex: none;      /* Jangan biarkan flex mengubah ukuran otomatis */
+}
+
+.result-page h2 {
+    font-family: var(--font-heading);
+    font-size: 2.8rem;
+    color: var(--secondary-accent);
+}
+
+.score-text {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--primary-accent);
+    margin: 10px 0;
+}
+
+.score-details {
+    font-size: 1.2rem;
+    color: var(--text-color);
+}
+
+/* Hapus margin top khusus retryBtn karena sudah dihandle container */
+#retryBtn {
+    margin-top: 0; 
 }
 /* Style untuk link yang tampil seperti tombol */
 a.nav-btn,
