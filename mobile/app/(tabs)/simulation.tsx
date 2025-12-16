@@ -207,9 +207,14 @@ export default function SimulationScreen() {
     const lines = [];
     const numLines = 5;
     
-    // Horizontal lines
+    // Calculate scale values based on current results
+    const maxX = maxDistance > 0 ? Math.ceil(maxDistance * 1.2) : 100;
+    const maxY = maxHeight > 0 ? Math.ceil(maxHeight * 1.5) : 50;
+    
+    // Horizontal lines with Y-axis labels
     for (let i = 0; i <= numLines; i++) {
       const y = PADDING + ((CANVAS_HEIGHT - PADDING * 2) / numLines) * i;
+      const yValue = Math.round(maxY - (maxY / numLines) * i);
       lines.push(
         <Line
           key={`h-${i}`}
@@ -221,11 +226,25 @@ export default function SimulationScreen() {
           strokeWidth={0.5}
         />
       );
+      // Y-axis scale labels
+      lines.push(
+        <SvgText
+          key={`hy-${i}`}
+          x={PADDING - 5}
+          y={y + 3}
+          fill={COLORS.textMuted}
+          fontSize={8}
+          textAnchor="end"
+        >
+          {yValue}
+        </SvgText>
+      );
     }
     
-    // Vertical lines
+    // Vertical lines with X-axis labels
     for (let i = 0; i <= numLines; i++) {
       const x = PADDING + ((CANVAS_WIDTH - PADDING * 2) / numLines) * i;
+      const xValue = Math.round((maxX / numLines) * i);
       lines.push(
         <Line
           key={`v-${i}`}
@@ -236,6 +255,19 @@ export default function SimulationScreen() {
           stroke={COLORS.border}
           strokeWidth={0.5}
         />
+      );
+      // X-axis scale labels
+      lines.push(
+        <SvgText
+          key={`vx-${i}`}
+          x={x}
+          y={CANVAS_HEIGHT - PADDING + 12}
+          fill={COLORS.textMuted}
+          fontSize={8}
+          textAnchor="middle"
+        >
+          {xValue}
+        </SvgText>
       );
     }
     
@@ -346,21 +378,21 @@ export default function SimulationScreen() {
           {/* Labels */}
           <SvgText
             x={CANVAS_WIDTH / 2}
-            y={CANVAS_HEIGHT - 5}
-            fill={COLORS.textMuted}
+            y={CANVAS_HEIGHT - 2}
+            fill={COLORS.textSecondary}
             fontSize={10}
             textAnchor="middle"
           >
             Jarak (m)
           </SvgText>
           <SvgText
-            x={10}
+            x={8}
             y={CANVAS_HEIGHT / 2}
-            fill={COLORS.textMuted}
+            fill={COLORS.textSecondary}
             fontSize={10}
             textAnchor="middle"
             rotation="-90"
-            origin={`10, ${CANVAS_HEIGHT / 2}`}
+            origin={`8, ${CANVAS_HEIGHT / 2}`}
           >
             Tinggi (m)
           </SvgText>

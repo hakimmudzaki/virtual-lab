@@ -1,11 +1,13 @@
 // Firebase Configuration for Mobile App
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
-  getAuth, 
+  initializeAuth,
+  getReactNativePersistence,
   GoogleAuthProvider,
   signInWithCredential,
   signOut as firebaseSignOut
 } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Firebase Configuration - sama dengan web app
 const firebaseConfig = {
@@ -20,7 +22,12 @@ const firebaseConfig = {
 
 // Initialize Firebase (cegah multiple initialization)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
+
+// Initialize Auth with AsyncStorage persistence
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
+
 const googleProvider = new GoogleAuthProvider();
 
 export { app, auth, googleProvider, signInWithCredential, firebaseSignOut };

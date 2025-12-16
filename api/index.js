@@ -356,5 +356,6 @@ module.exports = app;
 // Local test server
 if (require.main === module) {
     const port = process.env.PORT || 3000;
-    app.listen(port, () => console.log(`Local API server listening on http://localhost:${port}`));
+    const host = '0.0.0.0'; // Bind to all interfaces for mobile testing
+    app.listen(port, host, () => console.log(`Local API server listening on http://${host}:${port}`));
 }

@@ -3,24 +3,20 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { makeRedirectUri } from 'expo-auth-session';
 
 // Complete auth session for web browser
 WebBrowser.maybeCompleteAuthSession();
 
 // Firebase Google OAuth Client IDs
-// Ambil dari Firebase Console → Authentication → Sign-in method → Google → Web client ID
-// Format: [project-number]-[random].apps.googleusercontent.com
-const EXPO_CLIENT_ID = '271458979986-1b7iig4grop8tfu5tdg792dk01avs43v.apps.googleusercontent.com';
+// Web Client ID dari Firebase Console
+const WEB_CLIENT_ID = '271458979986-1b7iig4grop8tfu5tdg792dk01avs43v.apps.googleusercontent.com';
 
 export const useGoogleAuth = () => {
-  const redirectUri = makeRedirectUri({
-    scheme: 'virtuallabmobile',
-  });
-
   const [request, response, promptAsync] = Google.useAuthRequest({
-    expoClientId: EXPO_CLIENT_ID,
-    webClientId: EXPO_CLIENT_ID,
+    expoClientId: WEB_CLIENT_ID,
+    webClientId: WEB_CLIENT_ID,
+    androidClientId: WEB_CLIENT_ID, // Gunakan Web Client ID untuk Expo Go
+    iosClientId: WEB_CLIENT_ID,     // Gunakan Web Client ID untuk Expo Go
     scopes: ['profile', 'email'],
   });
 

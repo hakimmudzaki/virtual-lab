@@ -53,7 +53,7 @@ export default function ProfileScreen() {
 
       {/* Menu Items */}
       <View style={styles.menuContainer}>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/statistics')}>
           <View style={styles.menuIconContainer}>
             <Ionicons name="stats-chart" size={24} color={COLORS.primary} />
           </View>
@@ -64,18 +64,7 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuIconContainer}>
-            <Ionicons name="trophy" size={24} color={COLORS.secondary} />
-          </View>
-          <View style={styles.menuContent}>
-            <Text style={styles.menuTitle}>Pencapaian</Text>
-            <Text style={styles.menuSubtitle}>Badge dan reward</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/settings')}>
           <View style={styles.menuIconContainer}>
             <Ionicons name="settings" size={24} color={COLORS.textSecondary} />
           </View>
@@ -86,18 +75,7 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuIconContainer}>
-            <Ionicons name="help-circle" size={24} color={COLORS.warning} />
-          </View>
-          <View style={styles.menuContent}>
-            <Text style={styles.menuTitle}>Bantuan</Text>
-            <Text style={styles.menuSubtitle}>FAQ dan panduan</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/about')}>
           <View style={styles.menuIconContainer}>
             <Ionicons name="information-circle" size={24} color={COLORS.primary} />
           </View>
