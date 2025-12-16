@@ -219,6 +219,45 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// Change Password
+app.post('/api/auth/change-password', authMiddleware, async (req, res) => {
+    try {
+        await connectToDatabase();
+        const { currentPassword, newPassword } = req.body;
+        
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'Password lama dan baru harus diisi.' });
+        }
+        
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'Password baru minimal 6 karakter.' });
+        }
+        
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User tidak ditemukan.' });
+        }
+        
+        // Jika user Google tanpa password
+        if (user.authProvider === 'google' && !user.password) {
+            return res.status(400).json({ message: 'Akun Google tidak dapat mengubah password.' });
+        }
+        
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ message: 'Password lama salah.' });
+        }
+        
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+        
+        res.json({ message: 'Password berhasil diubah!' });
+    } catch (error) {
+        console.error('ERROR CHANGE PASSWORD:', error);
+        res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
+    }
+});
+
 // Google/Firebase Authentication
 app.post('/api/auth/google', async (req, res) => {
     try {

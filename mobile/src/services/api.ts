@@ -7,6 +7,7 @@ export interface User {
   username: string;
   email?: string;
   photoURL?: string;
+  authProvider?: 'local' | 'google';
 }
 
 export interface AuthResponse {

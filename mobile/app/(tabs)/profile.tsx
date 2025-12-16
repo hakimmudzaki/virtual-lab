@@ -53,24 +53,13 @@ export default function ProfileScreen() {
 
       {/* Menu Items */}
       <View style={styles.menuContainer}>
-        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/statistics')}>
-          <View style={styles.menuIconContainer}>
-            <Ionicons name="stats-chart" size={24} color={COLORS.primary} />
-          </View>
-          <View style={styles.menuContent}>
-            <Text style={styles.menuTitle}>Statistik</Text>
-            <Text style={styles.menuSubtitle}>Lihat progres belajar Anda</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
-        </TouchableOpacity>
-
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/settings')}>
           <View style={styles.menuIconContainer}>
             <Ionicons name="settings" size={24} color={COLORS.textSecondary} />
           </View>
           <View style={styles.menuContent}>
             <Text style={styles.menuTitle}>Pengaturan</Text>
-            <Text style={styles.menuSubtitle}>Konfigurasi aplikasi</Text>
+            <Text style={styles.menuSubtitle}>Konfigurasi akun</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
         </TouchableOpacity>
