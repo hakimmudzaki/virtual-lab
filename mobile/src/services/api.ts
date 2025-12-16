@@ -40,6 +40,15 @@ const getAuthHeaders = async (): Promise<HeadersInit> => {
   };
 };
 
+// Helper function to handle token expiry
+const handleAuthError = async (response: Response): Promise<void> => {
+  if (response.status === 401) {
+    // Token expired or invalid - clear auth data
+    await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('user');
+  }
+};
+
 // Auth API
 export const authAPI = {
   // Register
@@ -142,12 +151,13 @@ export const simulationAPI = {
       body: JSON.stringify(data),
     });
     
-    const result = await response.json();
     if (!response.ok) {
+      await handleAuthError(response);
+      const result = await response.json();
       throw new Error(result.message || 'Gagal menyimpan simulasi.');
     }
     
-    return result;
+    return response.json();
   },
 
   // Get history
@@ -158,12 +168,13 @@ export const simulationAPI = {
       headers,
     });
     
-    const data = await response.json();
     if (!response.ok) {
+      await handleAuthError(response);
+      const data = await response.json();
       throw new Error(data.message || 'Gagal mengambil riwayat.');
     }
     
-    return data;
+    return response.json();
   },
 
   // Delete history item
@@ -174,12 +185,13 @@ export const simulationAPI = {
       headers,
     });
     
-    const data = await response.json();
     if (!response.ok) {
+      await handleAuthError(response);
+      const data = await response.json();
       throw new Error(data.message || 'Gagal menghapus riwayat.');
     }
     
-    return data;
+    return response.json();
   },
 
   // Delete all history
@@ -190,12 +202,13 @@ export const simulationAPI = {
       headers,
     });
     
-    const data = await response.json();
     if (!response.ok) {
+      await handleAuthError(response);
+      const data = await response.json();
       throw new Error(data.message || 'Gagal menghapus semua riwayat.');
     }
     
-    return data;
+    return response.json();
   },
 };
 
@@ -209,11 +222,13 @@ export const scoreAPI = {
       headers,
     });
     
-    const data = await response.json();
     if (!response.ok) {
+      await handleAuthError(response);
+      const data = await response.json();
       throw new Error(data.message || 'Gagal mengambil skor.');
     }
     
+    const data = await response.json();
     return data.bestScore || 0;
   },
 
@@ -226,12 +241,13 @@ export const scoreAPI = {
       body: JSON.stringify({ score }),
     });
     
-    const data = await response.json();
     if (!response.ok) {
+      await handleAuthError(response);
+      const data = await response.json();
       throw new Error(data.message || 'Gagal menyimpan skor.');
     }
     
-    return data;
+    return response.json();
   },
 };
 
@@ -245,11 +261,13 @@ export const chatbotAPI = {
       body: JSON.stringify({ message }),
     });
     
-    const data = await response.json();
     if (!response.ok) {
+      await handleAuthError(response);
+      const data = await response.json();
       throw new Error(data.error || 'Gagal menghubungi chatbot.');
     }
     
+    const data = await response.json();
     return data.response;
   },
 };

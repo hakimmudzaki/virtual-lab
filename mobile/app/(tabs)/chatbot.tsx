@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, API_URL } from '../../src/constants';
@@ -124,25 +125,15 @@ export default function ChatbotTab() {
     </View>
   );
 
-  const QuickQuestion = ({ text }: { text: string }) => (
-    <TouchableOpacity
-      style={styles.quickQuestion}
-      onPress={() => {
-        setInputText(text);
-      }}
-    >
-      <Text style={styles.quickQuestionText}>{text}</Text>
-    </TouchableOpacity>
-  );
-
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={90}
-    >
-      {/* Header */}
-      <View style={styles.header}>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={90}
+      >
+        {/* Header */}
+        <View style={styles.header}>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>🤖 AI Physics Tutor</Text>
           <Text style={styles.headerSubtitle}>Khusus Gerak Parabola • Powered by Gemini AI</Text>
@@ -164,21 +155,6 @@ export default function ChatbotTab() {
         contentContainerStyle={styles.messagesList}
         showsVerticalScrollIndicator={false}
       />
-
-      {/* Quick Questions */}
-      {messages.length <= 2 && (
-        <View style={styles.quickQuestions}>
-          <Text style={styles.quickQuestionsTitle}>Pertanyaan Populer:</Text>
-          <View style={styles.quickQuestionsRow}>
-            <QuickQuestion text="Apa itu gerak parabola?" />
-            <QuickQuestion text="Rumus jarak horizontal" />
-          </View>
-          <View style={styles.quickQuestionsRow}>
-            <QuickQuestion text="Tinggi maksimum parabola" />
-            <QuickQuestion text="Contoh soal parabola" />
-          </View>
-        </View>
-      )}
 
       {/* Loading Indicator */}
       {isLoading && (
@@ -210,12 +186,17 @@ export default function ChatbotTab() {
             color={inputText.trim() && !isLoading ? '#fff' : COLORS.textMuted}
           />
         </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
@@ -225,10 +206,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
-    paddingTop: 50,
+    paddingTop: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.background,
   },
   headerCenter: {
     flex: 1,
@@ -246,13 +228,14 @@ const styles = StyleSheet.create({
   clearButton: {
     position: 'absolute',
     right: 16,
-    top: 55,
+    top: 20,
     padding: 8,
   },
   messagesList: {
     padding: 16,
     paddingBottom: 8,
     flexGrow: 1,
+    backgroundColor: COLORS.background,
   },
   messageBubble: {
     flexDirection: 'row',
@@ -299,34 +282,6 @@ const styles = StyleSheet.create({
   },
   userMessageText: {
     color: '#fff',
-  },
-  quickQuestions: {
-    padding: 16,
-    backgroundColor: COLORS.background,
-  },
-  quickQuestionsTitle: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-    marginBottom: 12,
-  },
-  quickQuestionsRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  quickQuestion: {
-    flex: 1,
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  quickQuestionText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
   },
   loadingContainer: {
     flexDirection: 'row',

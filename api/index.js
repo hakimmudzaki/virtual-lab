@@ -60,6 +60,8 @@ ATURAN FORMAT JAWABAN YANG WAJIB DIIKUTI:
 5. Jangan gunakan tanda * berlebihan atau formatting LaTeX yang rumit
 6. Berikan contoh nyata yang mudah dipahami
 7. Hindari penggunaan tanda bintang (*) kecuali untuk membuat teks tebal dengan **
+8. Jika menjelaskan rumus, jelaskan setiap variabel dengan singkat
+9. Jangan menggunakan format <br>• <strong>Header:</strong> seperti format HTML dalam jawaban Anda
 `;
 
 function formatGeminiResponse(text) {
@@ -105,6 +107,36 @@ function formatGeminiResponse(text) {
 
 // Safety limits when model ignores constraints
 const MAX_RESPONSE_CHARS = 2000; // batas aman sebelum dipotong
+
+// Plain text formatter for mobile app (no HTML tags)
+function formatGeminiResponsePlain(text) {
+    let formatted = (text || '').trim();
+
+    // Remove triple asterisks
+    formatted = formatted.replace(/\*{3,}/g, '');
+    // Remove bold markers
+    formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '$1');
+    formatted = formatted.replace(/\*([^*]+)\*(?!\*)/g, '$1');
+
+    // LaTeX -> unicode
+    formatted = formatted.replace(/\\theta/g, 'θ');
+    formatted = formatted.replace(/\\sin/g, 'sin');
+    formatted = formatted.replace(/\\cos/g, 'cos');
+    formatted = formatted.replace(/\\tan/g, 'tan');
+    formatted = formatted.replace(/\\cdot/g, '·');
+    formatted = formatted.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)');
+
+    // Subscripts / superscripts to plain text
+    formatted = formatted.replace(/([a-zA-Z])_\{([^}]+)\}/g, '$1$2');
+    formatted = formatted.replace(/([a-zA-Z])_([a-zA-Z0-9])/g, '$1$2');
+    formatted = formatted.replace(/\^\{([^}]+)\}/g, '^$1');
+    formatted = formatted.replace(/\^([0-9]+)/g, '^$1');
+
+    // Clean up extra newlines
+    formatted = formatted.replace(/\n{3,}/g, '\n\n');
+
+    return formatted.trim();
+}
 
 
 // MongoDB Connection
@@ -157,7 +189,7 @@ app.post('/api/auth/register', async (req, res) => {
         const newUser = new User({ username, password });
         await newUser.save();
 
-        const token = jwt.sign({ id: newUser._id, username: newUser.username }, JWT_SECRET, { expiresIn: '24h' });
+        const token = jwt.sign({ id: newUser._id, username: newUser.username }, JWT_SECRET, { expiresIn: '7d' });
         res.status(201).json({ message: 'Registrasi berhasil!', token, user: { id: newUser._id, username: newUser.username } });
     } catch (error) {
         console.error('ERROR REGISTRASI:', error);
@@ -179,7 +211,7 @@ app.post('/api/auth/login', async (req, res) => {
         
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) return res.status(400).json({ message: 'Username atau password salah.' });
-        const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
+        const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
         res.json({ message: 'Login berhasil!', token, user: { id: user._id, username: user.username } });
     } catch (error) {
         console.error('ERROR LOGIN:', error);
@@ -236,7 +268,7 @@ app.post('/api/auth/google', async (req, res) => {
         const token = jwt.sign(
             { id: user._id, username: user.username }, 
             JWT_SECRET, 
-            { expiresIn: '24h' }
+            { expiresIn: '7d' }
         );
         
         res.json({ 
@@ -329,7 +361,7 @@ app.post('/api/ask', async (req, res) => {
         const result = await model.generateContent(fullPrompt);
         const rawText = (result && result.response && typeof result.response.text === 'function') ? result.response.text() : String(result);
 
-        let formatted = formatGeminiResponse(rawText || '');
+        let formatted = formatGeminiResponsePlain(rawText || '');
         let truncated = false;
         if (formatted.length > MAX_RESPONSE_CHARS) {
             formatted = formatted.slice(0, MAX_RESPONSE_CHARS - 100) + '\n\n... (jawaban dipersingkat)';
