@@ -313,6 +313,36 @@ app.post('/api/scores', authMiddleware, async (req, res) => {
     try { await connectToDatabase(); const { score } = req.body; let userScore = await Score.findOne({ user: req.user.id }); if (!userScore) { userScore = new Score({ user: req.user.id, bestScore: score }); } else if (score > userScore.bestScore) { userScore.bestScore = score; } await userScore.save(); res.json({ message: 'Skor berhasil disimpan!', bestScore: userScore.bestScore, isNewRecord: !userScore || score > userScore.bestScore }); } catch (error) { console.error(error); res.status(500).json({ message: 'Terjadi kesalahan pada server.' }); }
 });
 
+// === Endpoint untuk Mobile App (tanpa auth) ===
+app.post('/api/ask', async (req, res) => {
+    try {
+        if (!model) return res.status(503).json({ error: 'Chatbot tidak tersedia', answer: 'Maaf, layanan chatbot sedang tidak tersedia.' });
+
+        const { question, message } = req.body;
+        const userMessage = question || message;
+        
+        if (!userMessage || userMessage.trim() === '') {
+            return res.status(400).json({ error: 'Pertanyaan tidak boleh kosong', answer: 'Silakan masukkan pertanyaan Anda.' });
+        }
+
+        const fullPrompt = `${systemInstruction}\n\nPertanyaan pengguna: ${userMessage}\n\nJawaban:`;
+        const result = await model.generateContent(fullPrompt);
+        const rawText = (result && result.response && typeof result.response.text === 'function') ? result.response.text() : String(result);
+
+        let formatted = formatGeminiResponse(rawText || '');
+        let truncated = false;
+        if (formatted.length > MAX_RESPONSE_CHARS) {
+            formatted = formatted.slice(0, MAX_RESPONSE_CHARS - 100) + '\n\n... (jawaban dipersingkat)';
+            truncated = true;
+        }
+
+        res.json({ answer: formatted, response: formatted, truncated });
+    } catch (error) {
+        console.error('API ASK ERROR:', error);
+        res.status(500).json({ error: 'Terjadi kesalahan pada chatbot.', answer: 'Maaf, terjadi kesalahan. Silakan coba lagi.' });
+    }
+});
+
 app.post('/api/chatbot', authMiddleware, async (req, res) => {
     try {
         await connectToDatabase();

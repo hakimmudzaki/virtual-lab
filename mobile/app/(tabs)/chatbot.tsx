@@ -333,6 +333,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
+    backgroundColor: COLORS.background,
   },
   loadingText: {
     marginLeft: 8,
@@ -345,6 +346,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+    backgroundColor: COLORS.background,
   },
   input: {
     flex: 1,
