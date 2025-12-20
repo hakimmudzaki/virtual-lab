@@ -16,7 +16,7 @@ const firebaseConfig = {
   projectId: "pawm-f3491",
   storageBucket: "pawm-f3491.firebasestorage.app",
   messagingSenderId: "271458979986",
-  appId: "1:271458979986:web:12280b3bd630fe6b80164b",
+  appId: "1:271458979986:android:8f8461103470f3ad80164b",
   measurementId: "G-K8TWEQ9MEJ"
 };
 
