@@ -16,14 +16,19 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourname.virtuallabmobile"
+      "bundleIdentifier": "com.virtuallab.fisika"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a0e27"
       },
-      "package": "com.yourname.virtuallabmobile"
+      "package": "com.virtuallab.fisika",
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ],
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -32,15 +37,17 @@
     "scheme": "virtuallabmobile",
     "plugins": [
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font"
     ],
     "extra": {
       "router": {
         "origin": false
       },
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "475ae60b-5a09-45aa-b982-5e9fc2716db8"
       }
-    }
+    },
+    "owner": "hakimm123"
   }
 }
