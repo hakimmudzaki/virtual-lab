@@ -1,7 +1,7 @@
 // Constants for the app
 export const API_URL = __DEV__ 
   ? 'http://10.163.223.101:3000' // IP WiFi lokal untuk development
-  : 'https://virtual-lab-pawm.vercel.app'; // URL Vercel production
+  : 'https://virtual-lab-lemon.vercel.app'; // URL Vercel production
 
 export const COLORS = {
   // Primary colors

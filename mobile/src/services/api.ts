@@ -54,42 +54,72 @@ const handleAuthError = async (response: Response): Promise<void> => {
 export const authAPI = {
   // Register
   register: async (username: string, password: string): Promise<AuthResponse> => {
-    const response = await fetch(`${API_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Gagal mendaftar.');
+    try {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      
+      // Check content type to avoid JSON parse error
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+        throw new Error('Server tidak merespons dengan benar. Coba lagi nanti.');
+      }
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal mendaftar.');
+      }
+      
+      // Save token
+      await AsyncStorage.setItem('token', data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      
+      return data;
+    } catch (error: any) {
+      if (error.message.includes('JSON')) {
+        throw new Error('Server tidak merespons dengan benar. Periksa koneksi internet Anda.');
+      }
+      throw error;
     }
-    
-    // Save token
-    await AsyncStorage.setItem('token', data.token);
-    await AsyncStorage.setItem('user', JSON.stringify(data.user));
-    
-    return data;
   },
 
   // Login
   login: async (username: string, password: string): Promise<AuthResponse> => {
-    const response = await fetch(`${API_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Gagal login.');
+    try {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      
+      // Check content type to avoid JSON parse error
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+        throw new Error('Server tidak merespons dengan benar. Coba lagi nanti.');
+      }
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal login.');
+      }
+      
+      // Save token
+      await AsyncStorage.setItem('token', data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      
+      return data;
+    } catch (error: any) {
+      if (error.message.includes('JSON')) {
+        throw new Error('Server tidak merespons dengan benar. Periksa koneksi internet Anda.');
+      }
+      throw error;
     }
-    
-    // Save token
-    await AsyncStorage.setItem('token', data.token);
-    await AsyncStorage.setItem('user', JSON.stringify(data.user));
-    
-    return data;
   },
 
   // Google Login
@@ -99,27 +129,42 @@ export const authAPI = {
     displayName: string | null;
     photoURL: string | null;
   }): Promise<AuthResponse> => {
-    const response = await fetch(`${API_URL}/api/auth/google`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        firebaseUid: firebaseUser.uid,
-        email: firebaseUser.email,
-        displayName: firebaseUser.displayName,
-        photoURL: firebaseUser.photoURL,
-      }),
-    });
-    
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Gagal autentikasi dengan Google.');
+    try {
+      const response = await fetch(`${API_URL}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firebaseUid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          photoURL: firebaseUser.photoURL,
+        }),
+      });
+      
+      // Check content type to avoid JSON parse error
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+        throw new Error('Server tidak merespons dengan benar. Coba lagi nanti.');
+      }
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal autentikasi dengan Google.');
+      }
+      
+      // Save token
+      await AsyncStorage.setItem('token', data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      
+      return data;
+    } catch (error: any) {
+      if (error.message.includes('JSON')) {
+        throw new Error('Server tidak merespons dengan benar. Periksa koneksi internet Anda.');
+      }
+      throw error;
     }
-    
-    // Save token
-    await AsyncStorage.setItem('token', data.token);
-    await AsyncStorage.setItem('user', JSON.stringify(data.user));
-    
-    return data;
   },
 
   // Logout
