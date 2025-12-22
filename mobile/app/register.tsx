@@ -15,15 +15,18 @@ import { router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/context/AuthContext';
 import { COLORS } from '../src/constants';
+import { useGoogleAuth } from '../src/services/googleAuth';
 
 export default function RegisterScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
   const { register, googleLogin } = useAuth();
+  const { signInWithGoogle, isReady, isSigningIn } = useGoogleAuth();
 
   const handleRegister = async () => {
     if (!username.trim() || !password.trim()) {
@@ -55,11 +58,23 @@ export default function RegisterScreen() {
   };
 
   const handleGoogleRegister = async () => {
-    Alert.alert(
-      'Info',
-      'Google Login memerlukan konfigurasi Firebase. Silakan setup Firebase Auth terlebih dahulu.',
-      [{ text: 'OK' }]
-    );
+    if (!isReady || isSigningIn) {
+      Alert.alert('Info', 'Google Sign-In sedang memuat...');
+      return;
+    }
+    
+    try {
+      setIsGoogleLoading(true);
+      const result = await signInWithGoogle();
+      if (result) {
+        await googleLogin(result.user);
+        router.replace('/(tabs)/simulation');
+      }
+    } catch (error: any) {
+      Alert.alert('Login Gagal', error.message || 'Terjadi kesalahan saat login dengan Google.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   return (
@@ -148,11 +163,18 @@ export default function RegisterScreen() {
           </View>
 
           <TouchableOpacity 
-            style={styles.googleButton}
+            style={[styles.googleButton, isGoogleLoading && styles.buttonDisabled]}
             onPress={handleGoogleRegister}
+            disabled={isGoogleLoading}
           >
-            <Ionicons name="logo-google" size={24} color="#4285F4" />
-            <Text style={styles.googleButtonText}>Daftar dengan Google</Text>
+            {isGoogleLoading ? (
+              <ActivityIndicator color="#4285F4" />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={24} color="#4285F4" />
+                <Text style={styles.googleButtonText}>Daftar dengan Google</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           <View style={styles.footer}>

@@ -34,11 +34,17 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "scheme": "virtuallabmobile",
+    "scheme": "com.virtuallab.fisika",
     "plugins": [
       "expo-router",
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.271458979986-1b7iig4grop8tfu5tdg792dk01avs43v"
+        }
+      ]
     ],
     "extra": {
       "router": {

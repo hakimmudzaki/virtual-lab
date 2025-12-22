@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -25,29 +25,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   
   const { login, googleLogin } = useAuth();
-  const { signInWithGoogle, isReady, response } = useGoogleAuth();
-
-  // Handle Google Auth response
-  useEffect(() => {
-    if (response?.type === 'success') {
-      handleGoogleSuccess();
-    }
-  }, [response]);
-
-  const handleGoogleSuccess = async () => {
-    try {
-      setIsGoogleLoading(true);
-      const result = await signInWithGoogle();
-      if (result) {
-        await googleLogin(result.user);
-        router.replace('/(tabs)/simulation');
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Gagal login dengan Google');
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
+  const { signInWithGoogle, isReady, isSigningIn } = useGoogleAuth();
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -67,7 +45,7 @@ export default function LoginScreen() {
   };
 
   const handleGoogleLogin = async () => {
-    if (!isReady) {
+    if (!isReady || isSigningIn) {
       Alert.alert('Info', 'Google Sign-In sedang memuat...');
       return;
     }

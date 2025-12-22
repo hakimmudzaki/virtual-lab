@@ -1,66 +1,87 @@
-// Google Authentication Service for Expo with Firebase
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
+// Google Authentication Service for Expo with Native Google Sign-In
+import {
+  GoogleSignin,
+  statusCodes,
+  isSuccessResponse,
+  isErrorWithCode,
+} from '@react-native-google-signin/google-signin';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { Platform } from 'react-native';
-
-// Complete auth session for web browser
-WebBrowser.maybeCompleteAuthSession();
+import { useEffect, useState, useCallback } from 'react';
 
 // Firebase Google OAuth Client IDs
-// Untuk standalone APK, kamu perlu membuat Android OAuth Client ID di Google Cloud Console
-// dengan package name: com.virtuallab.fisika dan SHA-1 fingerprint dari EAS
-
-// Web Client ID dari Firebase Console (untuk Expo Go development)
+// Web Client ID dari Firebase Console (diperlukan untuk Firebase Auth)
 const WEB_CLIENT_ID = '271458979986-1b7iig4grop8tfu5tdg792dk01avs43v.apps.googleusercontent.com';
 
-// Android Client ID - PERLU DIBUAT di Google Cloud Console
-// 1. Buka https://console.cloud.google.com/apis/credentials
-// 2. Create OAuth 2.0 Client ID -> Android
-// 3. Package name: com.virtuallab.fisika
-// 4. SHA-1 fingerprint: dapatkan dari EAS dengan: eas credentials
-const ANDROID_CLIENT_ID = '271458979986-o1a5la2sspknav8acriqfm690lr99kqk.apps.googleusercontent.com';
+// Configure Google Sign-In saat app dimulai
+let isConfigured = false;
+
+const configureGoogleSignIn = () => {
+  if (isConfigured) return;
+  
+  try {
+    GoogleSignin.configure({
+      webClientId: WEB_CLIENT_ID,
+      offlineAccess: true, // Untuk mendapatkan refresh token
+      scopes: ['profile', 'email'],
+    });
+    isConfigured = true;
+    console.log('Google Sign-In configured successfully');
+  } catch (error) {
+    console.error('Failed to configure Google Sign-In:', error);
+  }
+};
+
+// Initialize on module load
+configureGoogleSignIn();
 
 export const useGoogleAuth = () => {
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: WEB_CLIENT_ID,
-    // Untuk standalone Android APK, gunakan Android Client ID
-    androidClientId: ANDROID_CLIENT_ID || WEB_CLIENT_ID,
-    iosClientId: WEB_CLIENT_ID,
-    scopes: ['profile', 'email'],
-    // Gunakan useProxy untuk development di Expo Go
-    // Untuk standalone build, ini akan diabaikan
-  });
+  const [isReady, setIsReady] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
-  const signInWithGoogle = async (): Promise<{
+  useEffect(() => {
+    configureGoogleSignIn();
+    setIsReady(true);
+  }, []);
+
+  const signInWithGoogle = useCallback(async (): Promise<{
     user: any;
     idToken: string;
   } | null> => {
-    try {
-      // Check if Android Client ID is configured for standalone builds
-      if (Platform.OS === 'android' && !ANDROID_CLIENT_ID && !__DEV__) {
-        throw new Error(
-          'Google Sign-In belum dikonfigurasi untuk aplikasi standalone. ' +
-          'Silakan hubungi developer untuk mengaktifkan fitur ini.'
-        );
-      }
+    if (isSigningIn) {
+      console.log('Sign-in already in progress');
+      return null;
+    }
 
-      const result = await promptAsync();
+    setIsSigningIn(true);
+
+    try {
+      console.log('Starting Google Sign-In...');
       
-      if (result.type === 'success') {
-        const { id_token } = result.params;
+      // Check if Play Services are available
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      
+      // Attempt sign in
+      const response = await GoogleSignin.signIn();
+      console.log('Google Sign-In response type:', response.type);
+      
+      if (isSuccessResponse(response)) {
+        const { idToken } = response.data;
         
-        if (!id_token) {
+        if (!idToken) {
           throw new Error('Tidak mendapat token dari Google. Coba lagi.');
         }
         
+        console.log('Got idToken, signing in to Firebase...');
+        
         // Create Firebase credential
-        const credential = GoogleAuthProvider.credential(id_token);
+        const credential = GoogleAuthProvider.credential(idToken);
         
         // Sign in to Firebase
         const userCredential = await signInWithCredential(auth, credential);
         const user = userCredential.user;
+        
+        console.log('Firebase sign-in successful:', user.email);
         
         return {
           user: {
@@ -69,36 +90,70 @@ export const useGoogleAuth = () => {
             displayName: user.displayName,
             photoURL: user.photoURL,
           },
-          idToken: id_token,
+          idToken: idToken,
         };
-      } else if (result.type === 'cancel') {
+      } else {
+        // User cancelled
+        console.log('Google Sign-In cancelled by user');
         return null;
-      } else if (result.type === 'error') {
-        throw new Error(result.error?.message || 'Gagal login dengan Google');
       }
-      
-      return null;
     } catch (error: any) {
       console.error('Google Sign-In Error:', error);
       
-      // Handle specific errors
-      if (error.message?.includes('invalid_request') || error.message?.includes('Custom scheme')) {
-        throw new Error(
-          'Login Google tidak tersedia untuk versi APK ini. ' +
-          'Gunakan login dengan username dan password.'
-        );
+      // Handle specific error codes
+      if (isErrorWithCode(error)) {
+        switch (error.code) {
+          case statusCodes.SIGN_IN_CANCELLED:
+            console.log('User cancelled the sign-in');
+            return null;
+            
+          case statusCodes.IN_PROGRESS:
+            console.log('Sign-in already in progress');
+            return null;
+            
+          case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+            throw new Error(
+              'Google Play Services tidak tersedia. ' +
+              'Pastikan perangkat Anda memiliki Google Play Services terbaru.'
+            );
+            
+          default:
+            throw new Error(
+              error.message || 'Gagal login dengan Google. Silakan coba lagi.'
+            );
+        }
       }
       
       throw error;
+    } finally {
+      setIsSigningIn(false);
     }
-  };
+  }, [isSigningIn]);
+
+  const signOutFromGoogle = useCallback(async () => {
+    try {
+      await GoogleSignin.signOut();
+      console.log('Signed out from Google');
+    } catch (error) {
+      console.error('Error signing out from Google:', error);
+    }
+  }, []);
+
+  const getCurrentUser = useCallback(async () => {
+    try {
+      const currentUser = await GoogleSignin.getCurrentUser();
+      return currentUser;
+    } catch (error) {
+      return null;
+    }
+  }, []);
 
   return {
-    request,
-    response,
-    promptAsync,
     signInWithGoogle,
-    isReady: !!request,
+    signOutFromGoogle,
+    getCurrentUser,
+    isReady,
+    isSigningIn,
   };
 };
 
