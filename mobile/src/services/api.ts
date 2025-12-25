@@ -74,11 +74,17 @@ export const authAPI = {
         throw new Error(data.message || 'Gagal mendaftar.');
       }
       
+      // Ensure user has authProvider set to 'local'
+      const userWithProvider = {
+        ...data.user,
+        authProvider: 'local' as const,
+      };
+      
       // Save token
       await AsyncStorage.setItem('token', data.token);
-      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      await AsyncStorage.setItem('user', JSON.stringify(userWithProvider));
       
-      return data;
+      return { ...data, user: userWithProvider };
     } catch (error: any) {
       if (error.message.includes('JSON')) {
         throw new Error('Server tidak merespons dengan benar. Periksa koneksi internet Anda.');
@@ -109,11 +115,17 @@ export const authAPI = {
         throw new Error(data.message || 'Gagal login.');
       }
       
+      // Ensure user has authProvider set to 'local'
+      const userWithProvider = {
+        ...data.user,
+        authProvider: 'local' as const,
+      };
+      
       // Save token
       await AsyncStorage.setItem('token', data.token);
-      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      await AsyncStorage.setItem('user', JSON.stringify(userWithProvider));
       
-      return data;
+      return { ...data, user: userWithProvider };
     } catch (error: any) {
       if (error.message.includes('JSON')) {
         throw new Error('Server tidak merespons dengan benar. Periksa koneksi internet Anda.');
@@ -154,11 +166,17 @@ export const authAPI = {
         throw new Error(data.message || 'Gagal autentikasi dengan Google.');
       }
       
+      // Ensure user has authProvider set to 'google'
+      const userWithProvider = {
+        ...data.user,
+        authProvider: 'google' as const,
+      };
+      
       // Save token
       await AsyncStorage.setItem('token', data.token);
-      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      await AsyncStorage.setItem('user', JSON.stringify(userWithProvider));
       
-      return data;
+      return { ...data, user: userWithProvider };
     } catch (error: any) {
       if (error.message.includes('JSON')) {
         throw new Error('Server tidak merespons dengan benar. Periksa koneksi internet Anda.');

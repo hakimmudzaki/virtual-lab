@@ -67,7 +67,8 @@ async function loginWithGoogle() {
         localStorage.setItem('user', JSON.stringify({
             username: data.user.username,
             email: data.user.email,
-            photoURL: data.user.photoURL
+            photoURL: data.user.photoURL,
+            authProvider: 'google' // Mark as Google user
         }));
         
         alert('Login dengan Google berhasil!');
@@ -162,6 +163,10 @@ if (loginForm) {
 
             // SIMPAN TOKEN KE BROWSER! Ini adalah langkah kuncinya.
             localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify({
+                username: data.user?.username || username,
+                authProvider: 'local' // Mark as local user
+            }));
 
             alert('Login berhasil!');
             window.location.href = 'index.html'; // Pindah ke halaman simulasi utama

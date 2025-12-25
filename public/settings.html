@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan - Virtual Lab</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Rajdhani:wght@700&display=swap" rel="stylesheet">
+    <style>
+        .settings-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .settings-card {
+            background: rgba(30, 36, 66, 0.95);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(77, 118, 253, 0.3);
+        }
+        .settings-card h2 {
+            color: #4d76fd;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .form-group label {
+            display: block;
+            color: #a0aec0;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(10, 14, 39, 0.8);
+            border: 1px solid rgba(77, 118, 253, 0.3);
+            border-radius: 8px;
+            color: #eaeaea;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #4d76fd;
+        }
+        .form-group input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4d76fd, #6e8eff);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(77, 118, 253, 0.4);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-secondary {
+            background: rgba(77, 118, 253, 0.2);
+            color: #4d76fd;
+            border: 1px solid rgba(77, 118, 253, 0.3);
+        }
+        .btn-secondary:hover {
+            background: rgba(77, 118, 253, 0.3);
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #a0aec0;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            transition: color 0.3s;
+        }
+        .back-link:hover {
+            color: #4d76fd;
+        }
+        .user-info-box {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(10, 14, 39, 0.5);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4d76fd, #6e8eff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        .user-details h3 {
+            color: #eaeaea;
+            margin: 0 0 0.25rem 0;
+        }
+        .user-details p {
+            color: #a0aec0;
+            margin: 0;
+            font-size: 0.85rem;
+        }
+        .auth-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .auth-badge.google {
+            background: rgba(234, 67, 53, 0.2);
+            color: #ea4335;
+        }
+        .auth-badge.local {
+            background: rgba(52, 168, 83, 0.2);
+            color: #34a853;
+        }
+        .google-notice {
+            background: rgba(234, 67, 53, 0.1);
+            border: 1px solid rgba(234, 67, 53, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            color: #ea4335;
+            font-size: 0.9rem;
+        }
+        .google-notice a {
+            color: #ea4335;
+            text-decoration: underline;
+        }
+        .success-message {
+            background: rgba(52, 168, 83, 0.1);
+            border: 1px solid rgba(52, 168, 83, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            color: #34a853;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .error-message {
+            background: rgba(234, 67, 53, 0.1);
+            border: 1px solid rgba(234, 67, 53, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            color: #ea4335;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .password-input-wrapper {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #a0aec0;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1rem;
+        }
+        .password-toggle:hover {
+            color: #4d76fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="stars-container">
+        <div class="stars"></div>
+        <div class="twinkling"></div>
+    </div>
+
+    <div class="settings-container">
+        <a href="index.html" class="back-link">← Kembali ke Simulasi</a>
+        
+        <h1 style="color: #eaeaea; margin-bottom: 2rem;">⚙️ Pengaturan</h1>
+
+        <!-- Profile Section -->
+        <div class="settings-card">
+            <h2>👤 Profil</h2>
+            <div class="user-info-box">
+                <div class="user-avatar" id="userAvatar">👤</div>
+                <div class="user-details">
+                    <h3 id="displayUsername">-</h3>
+                    <p id="displayEmail">-</p>
+                    <span class="auth-badge local" id="authBadge">Local</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Password Section (only for local users) -->
+        <div class="settings-card" id="passwordSection">
+            <h2>🔒 Ganti Password</h2>
+            
+            <div id="successMessage" class="success-message"></div>
+            <div id="errorMessage" class="error-message"></div>
+            
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Password Lama</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="currentPassword" placeholder="Masukkan password lama" required>
+                        <button type="button" class="password-toggle" data-target="currentPassword">👁️</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="newPassword">Password Baru</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="newPassword" placeholder="Minimal 6 karakter" required minlength="6">
+                        <button type="button" class="password-toggle" data-target="newPassword">👁️</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Konfirmasi Password Baru</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="confirmPassword" placeholder="Ulangi password baru" required>
+                        <button type="button" class="password-toggle" data-target="confirmPassword">👁️</button>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="changePasswordBtn">Ubah Password</button>
+            </form>
+        </div>
+
+        <!-- Google User Notice -->
+        <div class="settings-card" id="googleNoticeSection" style="display: none;">
+            <h2>🔒 Ganti Password</h2>
+            <div class="google-notice">
+                <p>Kamu login menggunakan akun Google. Untuk mengubah password, silakan kunjungi 
+                <a href="https://myaccount.google.com/security" target="_blank">pengaturan keamanan Google</a>.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Get user data
+        const userStr = localStorage.getItem('user');
+        let user = null;
+        
+        try {
+            user = userStr ? JSON.parse(userStr) : null;
+        } catch (e) {
+            console.error('Error parsing user:', e);
+        }
+
+        // Also get username from token if user object doesn't have it
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            if (!user) {
+                user = { username: payload.username };
+            } else if (!user.username) {
+                user.username = payload.username;
+            }
+        } catch (e) {
+            console.error('Error parsing token:', e);
+        }
+
+        // Update UI based on user data
+        const displayUsername = document.getElementById('displayUsername');
+        const displayEmail = document.getElementById('displayEmail');
+        const authBadge = document.getElementById('authBadge');
+        const passwordSection = document.getElementById('passwordSection');
+        const googleNoticeSection = document.getElementById('googleNoticeSection');
+        const userAvatar = document.getElementById('userAvatar');
+
+        if (user) {
+            displayUsername.textContent = user.username || user.email?.split('@')[0] || 'User';
+            displayEmail.textContent = user.email || '-';
+            
+            // Check if Google user
+            const isGoogleUser = user.authProvider === 'google';
+            
+            if (isGoogleUser) {
+                authBadge.textContent = 'Google';
+                authBadge.className = 'auth-badge google';
+                passwordSection.style.display = 'none';
+                googleNoticeSection.style.display = 'block';
+                
+                // Set Google avatar if available
+                if (user.photoURL) {
+                    userAvatar.innerHTML = `<img src="${user.photoURL}" style="width: 100%; height: 100%; border-radius: 50%;">`;
+                }
+            } else {
+                authBadge.textContent = 'Local';
+                authBadge.className = 'auth-badge local';
+                passwordSection.style.display = 'block';
+                googleNoticeSection.style.display = 'none';
+            }
+        }
+
+        // Password toggle functionality
+        document.querySelectorAll('.password-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.dataset.target;
+                const input = document.getElementById(targetId);
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    btn.textContent = '🙈';
+                } else {
+                    input.type = 'password';
+                    btn.textContent = '👁️';
+                }
+            });
+        });
+
+        // Change password form
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        changePasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validation
+            if (newPassword.length < 6) {
+                showError('Password baru minimal 6 karakter');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showError('Konfirmasi password tidak cocok');
+                return;
+            }
+            
+            const btn = document.getElementById('changePasswordBtn');
+            btn.disabled = true;
+            btn.textContent = 'Memproses...';
+            
+            try {
+                const response = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Gagal mengubah password');
+                }
+                
+                showSuccess('Password berhasil diubah!');
+                changePasswordForm.reset();
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Ubah Password';
+            }
+        });
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

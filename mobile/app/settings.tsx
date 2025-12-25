@@ -21,7 +21,11 @@ export default function SettingsScreen() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // Check if user logged in via Google (no password change available)
-  const isGoogleUser = user?.authProvider === 'google' || (user?.email && !user?.username);
+  // User Google TIDAK bisa ganti password di aplikasi ini
+  const isGoogleUser = user?.authProvider === 'google';
+  
+  // Debug log
+  console.log('User authProvider:', user?.authProvider, 'isGoogleUser:', isGoogleUser);
 
   const handleSaveUsername = async () => {
     if (!username.trim()) {

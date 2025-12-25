@@ -186,11 +186,19 @@ app.post('/api/auth/register', async (req, res) => {
         if (existingUser) return res.status(400).json({ message: 'Username sudah digunakan.' });
 
         // Let the Mongoose pre('save') hook handle hashing the password.
-        const newUser = new User({ username, password });
+        const newUser = new User({ username, password, authProvider: 'local' });
         await newUser.save();
 
         const token = jwt.sign({ id: newUser._id, username: newUser.username }, JWT_SECRET, { expiresIn: '7d' });
-        res.status(201).json({ message: 'Registrasi berhasil!', token, user: { id: newUser._id, username: newUser.username } });
+        res.status(201).json({ 
+            message: 'Registrasi berhasil!', 
+            token, 
+            user: { 
+                id: newUser._id, 
+                username: newUser.username,
+                authProvider: 'local'
+            } 
+        });
     } catch (error) {
         console.error('ERROR REGISTRASI:', error);
         res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
@@ -212,7 +220,15 @@ app.post('/api/auth/login', async (req, res) => {
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) return res.status(400).json({ message: 'Username atau password salah.' });
         const token = jwt.sign({ id: user._id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ message: 'Login berhasil!', token, user: { id: user._id, username: user.username } });
+        res.json({ 
+            message: 'Login berhasil!', 
+            token, 
+            user: { 
+                id: user._id, 
+                username: user.username,
+                authProvider: user.authProvider || 'local'
+            } 
+        });
     } catch (error) {
         console.error('ERROR LOGIN:', error);
         res.status(500).json({ message: 'Terjadi kesalahan pada server.' });
@@ -317,7 +333,8 @@ app.post('/api/auth/google', async (req, res) => {
                 id: user._id, 
                 username: user.username,
                 email: user.email,
-                photoURL: user.photoURL
+                photoURL: user.photoURL,
+                authProvider: 'google'
             } 
         });
     } catch (error) {
