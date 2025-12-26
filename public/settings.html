@@ -198,13 +198,13 @@
     <div class="settings-container">
         <a href="index.html" class="back-link">← Kembali ke Simulasi</a>
         
-        <h1 style="color: #eaeaea; margin-bottom: 2rem;">⚙️ Pengaturan</h1>
+        <h1 style="color: #eaeaea; margin-bottom: 2rem;">Pengaturan</h1>
 
         <!-- Profile Section -->
         <div class="settings-card">
-            <h2>👤 Profil</h2>
+            <h2>Profil</h2>
             <div class="user-info-box">
-                <div class="user-avatar" id="userAvatar">👤</div>
+                <div class="user-avatar" id="userAvatar"></div>
                 <div class="user-details">
                     <h3 id="displayUsername">-</h3>
                     <p id="displayEmail">-</p>
@@ -215,7 +215,7 @@
 
         <!-- Change Password Section (only for local users) -->
         <div class="settings-card" id="passwordSection">
-            <h2>🔒 Ganti Password</h2>
+            <h2>Ganti Password</h2>
             
             <div id="successMessage" class="success-message"></div>
             <div id="errorMessage" class="error-message"></div>
@@ -225,7 +225,7 @@
                     <label for="currentPassword">Password Lama</label>
                     <div class="password-input-wrapper">
                         <input type="password" id="currentPassword" placeholder="Masukkan password lama" required>
-                        <button type="button" class="password-toggle" data-target="currentPassword">👁️</button>
+                        <button type="button" class="password-toggle" data-target="currentPassword">Lihat</button>
                     </div>
                 </div>
                 
@@ -233,7 +233,7 @@
                     <label for="newPassword">Password Baru</label>
                     <div class="password-input-wrapper">
                         <input type="password" id="newPassword" placeholder="Minimal 6 karakter" required minlength="6">
-                        <button type="button" class="password-toggle" data-target="newPassword">👁️</button>
+                        <button type="button" class="password-toggle" data-target="newPassword">Lihat</button>
                     </div>
                 </div>
                 
@@ -241,7 +241,7 @@
                     <label for="confirmPassword">Konfirmasi Password Baru</label>
                     <div class="password-input-wrapper">
                         <input type="password" id="confirmPassword" placeholder="Ulangi password baru" required>
-                        <button type="button" class="password-toggle" data-target="confirmPassword">👁️</button>
+                        <button type="button" class="password-toggle" data-target="confirmPassword">Lihat</button>
                     </div>
                 </div>
                 
@@ -251,7 +251,7 @@
 
         <!-- Google User Notice -->
         <div class="settings-card" id="googleNoticeSection" style="display: none;">
-            <h2>🔒 Ganti Password</h2>
+            <h2>Ganti Password</h2>
             <div class="google-notice">
                 <p>Kamu login menggunakan akun Google. Untuk mengubah password, silakan kunjungi 
                 <a href="https://myaccount.google.com/security" target="_blank">pengaturan keamanan Google</a>.</p>
@@ -300,8 +300,8 @@
             displayUsername.textContent = user.username || user.email?.split('@')[0] || 'User';
             displayEmail.textContent = user.email || '-';
             
-            // Check if Google user
-            const isGoogleUser = user.authProvider === 'google';
+            // Check if Google user - juga cek apakah ada email dan photoURL (tanda user Google)
+            const isGoogleUser = user.authProvider === 'google' || (user.email && user.photoURL);
             
             if (isGoogleUser) {
                 authBadge.textContent = 'Google';
@@ -312,12 +312,15 @@
                 // Set Google avatar if available
                 if (user.photoURL) {
                     userAvatar.innerHTML = `<img src="${user.photoURL}" style="width: 100%; height: 100%; border-radius: 50%;">`;
+                } else {
+                    userAvatar.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
                 }
             } else {
                 authBadge.textContent = 'Local';
                 authBadge.className = 'auth-badge local';
                 passwordSection.style.display = 'block';
                 googleNoticeSection.style.display = 'none';
+                userAvatar.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
             }
         }
 
@@ -328,10 +331,10 @@
                 const input = document.getElementById(targetId);
                 if (input.type === 'password') {
                     input.type = 'text';
-                    btn.textContent = '🙈';
+                    btn.textContent = 'Sembunyikan';
                 } else {
                     input.type = 'password';
-                    btn.textContent = '👁️';
+                    btn.textContent = 'Lihat';
                 }
             });
         });
