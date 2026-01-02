@@ -5,18 +5,26 @@ import {
   isSuccessResponse,
   isErrorWithCode,
 } from '@react-native-google-signin/google-signin';
-import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithCredential, signInWithPopup } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { useEffect, useState, useCallback } from 'react';
+import { Platform } from 'react-native';
 
 // Firebase Google OAuth Client IDs
 // Web Client ID dari Firebase Console (diperlukan untuk Firebase Auth)
 const WEB_CLIENT_ID = '271458979986-1b7iig4grop8tfu5tdg792dk01avs43v.apps.googleusercontent.com';
 
-// Configure Google Sign-In saat app dimulai
+// Configure Google Sign-In saat app dimulai (hanya untuk mobile)
 let isConfigured = false;
 
 const configureGoogleSignIn = () => {
+  // Skip configuration on web platform
+  if (Platform.OS === 'web') {
+    isConfigured = true;
+    console.log('Google Sign-In: Using Firebase Web Auth');
+    return;
+  }
+
   if (isConfigured) return;
   
   try {
@@ -35,6 +43,34 @@ const configureGoogleSignIn = () => {
 // Initialize on module load
 configureGoogleSignIn();
 
+const googleProvider = new GoogleAuthProvider();
+
+export const signInWithGoogle = async () => {
+  try {
+    if (Platform.OS === 'web') {
+      // Web: gunakan signInWithPopup
+      const result = await signInWithPopup(auth, googleProvider);
+      return result.user;
+    } else {
+      // Mobile: gunakan expo-auth-session
+      // Implementasi untuk mobile tetap sama
+      throw new Error('Use useGoogleAuth hook for mobile');
+    }
+  } catch (error) {
+    console.error('Google Sign-In Error:', error);
+    throw error;
+  }
+};
+
+export const signOutGoogle = async () => {
+  try {
+    await auth.signOut();
+  } catch (error) {
+    console.error('Sign Out Error:', error);
+    throw error;
+  }
+};
+
 export const useGoogleAuth = () => {
   const [isReady, setIsReady] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -44,7 +80,7 @@ export const useGoogleAuth = () => {
     setIsReady(true);
   }, []);
 
-  const signInWithGoogle = useCallback(async (): Promise<{
+  const signInWithGoogleNative = useCallback(async (): Promise<{
     user: any;
     idToken: string;
   } | null> => {
@@ -56,6 +92,28 @@ export const useGoogleAuth = () => {
     setIsSigningIn(true);
 
     try {
+      // === WEB PLATFORM ===
+      if (Platform.OS === 'web') {
+        console.log('Starting Google Sign-In for Web...');
+        
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        const idToken = await user.getIdToken();
+        
+        console.log('Firebase Web sign-in successful:', user.email);
+        
+        return {
+          user: {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+          },
+          idToken: idToken,
+        };
+      }
+
+      // === MOBILE PLATFORM (Android/iOS) ===
       console.log('Starting Google Sign-In...');
       
       // Check if Play Services are available
@@ -132,7 +190,14 @@ export const useGoogleAuth = () => {
 
   const signOutFromGoogle = useCallback(async () => {
     try {
-      await GoogleSignin.signOut();
+      // Sign out from Firebase
+      await auth.signOut();
+      
+      // Also sign out from native Google (only on mobile)
+      if (Platform.OS !== 'web') {
+        await GoogleSignin.signOut();
+      }
+      
       console.log('Signed out from Google');
     } catch (error) {
       console.error('Error signing out from Google:', error);
@@ -141,6 +206,11 @@ export const useGoogleAuth = () => {
 
   const getCurrentUser = useCallback(async () => {
     try {
+      // On web, check Firebase auth state
+      if (Platform.OS === 'web') {
+        return auth.currentUser;
+      }
+      // On mobile, check native Google Sign-In
       const currentUser = await GoogleSignin.getCurrentUser();
       return currentUser;
     } catch (error) {
@@ -149,7 +219,7 @@ export const useGoogleAuth = () => {
   }, []);
 
   return {
-    signInWithGoogle,
+    signInWithGoogle: signInWithGoogleNative,
     signOutFromGoogle,
     getCurrentUser,
     isReady,

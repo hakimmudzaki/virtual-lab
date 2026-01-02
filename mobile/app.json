@@ -32,7 +32,8 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "static"
     },
     "scheme": "com.virtuallab.fisika",
     "plugins": [

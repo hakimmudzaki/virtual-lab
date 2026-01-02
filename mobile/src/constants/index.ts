@@ -1,6 +1,14 @@
 // Constants for the app
+import { Platform } from 'react-native';
+
+// Untuk web development, langsung pakai production API
+// Untuk mobile development, pakai IP lokal
+const DEV_API_URL = Platform.OS === 'web' 
+  ? 'https://virtual-lab-lemon.vercel.app' // Web dev pakai production
+  : 'http://10.163.223.101:3000'; // Mobile dev pakai IP lokal
+
 export const API_URL = __DEV__ 
-  ? 'http://10.163.223.101:3000' // IP WiFi lokal untuk development
+  ? DEV_API_URL
   : 'https://virtual-lab-lemon.vercel.app'; // URL Vercel production
 
 export const COLORS = {

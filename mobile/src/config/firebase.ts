@@ -1,34 +1,38 @@
 // Firebase Configuration for Mobile App
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeApp } from 'firebase/app';
 import { 
-  initializeAuth,
+  getAuth, 
   getReactNativePersistence,
-  GoogleAuthProvider,
-  signInWithCredential,
-  signOut as firebaseSignOut
+  browserLocalPersistence,
+  initializeAuth
 } from 'firebase/auth';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Firebase Configuration - sama dengan web app
 const firebaseConfig = {
-  apiKey: "AIzaSyCWNhyj4hSdPSbDsAF7kWYHluZEl6I6iq0",
-  authDomain: "pawm-f3491.firebaseapp.com",
-  projectId: "pawm-f3491",
-  storageBucket: "pawm-f3491.firebasestorage.app",
-  messagingSenderId: "271458979986",
-  appId: "1:271458979986:android:8f8461103470f3ad80164b",
-  measurementId: "G-K8TWEQ9MEJ"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase (cegah multiple initialization)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase App
+const app = initializeApp(firebaseConfig);
 
-// Initialize Auth with AsyncStorage persistence
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage)
-});
+// Initialize Auth dengan persistence yang berbeda untuk Web dan Mobile
+let auth;
 
-const googleProvider = new GoogleAuthProvider();
+if (Platform.OS === 'web') {
+  // Untuk Web: gunakan browserLocalPersistence
+  auth = getAuth(app);
+  auth.setPersistence(browserLocalPersistence);
+} else {
+  // Untuk Mobile (iOS/Android): gunakan AsyncStorage
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
+}
 
-export { app, auth, googleProvider, signInWithCredential, firebaseSignOut };
-export default app;
+export { app, auth };
