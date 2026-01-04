@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../src/constants';
 
@@ -10,7 +10,7 @@ export default function AboutScreen() {
     <View style={styles.container}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.appCard}>
-          <View style={styles.appIcon}><Text style={styles.appIconText}></Text></View>
+          <View style={styles.appIcon}><Image source={require('../assets/icon.png')} style={styles.appIconImage} /></View>
           <Text style={styles.appName}>Virtual Physics Lab</Text>
           <Text style={styles.appVersion}>Versi 1.0.0</Text>
           <Text style={styles.appDescription}>Aplikasi pembelajaran fisika interaktif dengan simulasi virtual untuk materi gerak parabola</Text>
@@ -48,9 +48,9 @@ export default function AboutScreen() {
         </View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Pengembang</Text>
-          <View style={styles.developerItem}><Ionicons name="person" size={20} color={COLORS.textMuted} /><Text style={styles.developerText}>Tim Virtual Lab</Text></View>
+          <View style={styles.developerItem}><Ionicons name="person" size={20} color={COLORS.textMuted} /><Text style={styles.developerText}>18223024 & 18223086</Text></View>
           <View style={styles.developerItem}><Ionicons name="school" size={20} color={COLORS.textMuted} /><Text style={styles.developerText}>Institut Teknologi Bandung</Text></View>
-          <View style={styles.developerItem}><Ionicons name="calendar" size={20} color={COLORS.textMuted} /><Text style={styles.developerText}>2025 Virtual Lab</Text></View>
+          <View style={styles.developerItem}><Ionicons name="calendar" size={20} color={COLORS.textMuted} /><Text style={styles.developerText}>2026 Virtual Lab</Text></View>
         </View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Teknologi</Text>
@@ -58,17 +58,17 @@ export default function AboutScreen() {
             <View style={styles.techItem}><Text style={styles.techIcon}></Text><Text style={styles.techName}>React Native</Text></View>
             <View style={styles.techItem}><Text style={styles.techIcon}></Text><Text style={styles.techName}>Expo</Text></View>
             <View style={styles.techItem}><Text style={styles.techIcon}></Text><Text style={styles.techName}>Firebase</Text></View>
-            <View style={styles.techItem}><Text style={styles.techIcon}></Text><Text style={styles.techName}>Gemini AI</Text></View>
+            <View style={styles.techItem}><Text style={styles.techIcon}></Text><Text style={styles.techName}>Gemini API</Text></View>
           </View>
         </View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Tautan</Text>
-          <TouchableOpacity style={styles.linkItem} onPress={() => openLink('https://virtual-lab-pawm.vercel.app')}>
+          <TouchableOpacity style={styles.linkItem} onPress={() => openLink('https://mobile-lilac-mu.vercel.app/')}>
             <Ionicons name="globe" size={20} color={COLORS.primary} />
             <Text style={styles.linkText}>Website</Text>
             <Ionicons name="open-outline" size={16} color={COLORS.textMuted} />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.linkItem, { borderBottomWidth: 0 }]} onPress={() => openLink('https://github.com')}>
+          <TouchableOpacity style={[styles.linkItem, { borderBottomWidth: 0 }]} onPress={() => openLink('https://github.com/hakimmudzaki/virtual-lab')}>
             <Ionicons name="logo-github" size={20} color={COLORS.textPrimary} />
             <Text style={styles.linkText}>Source Code</Text>
             <Ionicons name="open-outline" size={16} color={COLORS.textMuted} />
@@ -83,8 +83,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   content: { flex: 1, padding: 16, paddingTop: 8 },
   appCard: { backgroundColor: COLORS.cardBg, borderRadius: 20, padding: 24, alignItems: 'center', marginBottom: 16, borderWidth: 1, borderColor: COLORS.border },
-  appIcon: { width: 80, height: 80, borderRadius: 20, backgroundColor: 'rgba(77, 118, 253, 0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  appIconText: { fontSize: 40 },
+  appIcon: { width: 80, height: 80, borderRadius: 20, backgroundColor: 'rgba(77, 118, 253, 0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 16, overflow: 'hidden' },
+  appIconImage: { width: 70, height: 70, borderRadius: 14 },
   appName: { fontSize: 24, fontWeight: 'bold', color: COLORS.textPrimary, marginBottom: 4 },
   appVersion: { fontSize: 14, color: COLORS.primary, marginBottom: 12 },
   appDescription: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 20 },

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+  
+  <!-- Primary Meta Tags -->
+  <title>Virtual Lab - Simulasi Gerak Parabola</title>
+  <meta name="title" content="Virtual Lab - Simulasi Gerak Parabola" />
+  <meta name="description" content="Aplikasi pembelajaran fisika interaktif untuk simulasi gerak parabola" />
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#0a0e27" />
+  <meta name="msapplication-TileColor" content="#0a0e27" />
+  <meta name="background-color" content="#0a0e27" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/favicon.png" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Virtual Lab - Simulasi Gerak Parabola" />
+  <meta property="og:description" content="Aplikasi pembelajaran fisika interaktif untuk simulasi gerak parabola" />
+  <meta property="og:image" content="/assets/icon.png" />
+  
+  <!-- Mobile Web App -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Virtual Lab" />
+  
+  <style>
+    html, body, #root {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #0a0e27;
+      overflow: hidden;
+    }
+    
+    /* Loading screen */
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #0a0e27;
+      z-index: 9999;
+    }
+    
+    #loading img {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 20px;
+      border-radius: 20px;
+    }
+    
+    #loading p {
+      color: #eaeaea;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 18px;
+      margin: 0;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin-top: 20px;
+      border: 3px solid rgba(77, 118, 253, 0.3);
+      border-top-color: #4d76fd;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <img src="/assets/icon.png" alt="Virtual Lab" />
+    <p>Virtual Lab</p>
+    <div class="spinner"></div>
+  </div>
+  <div id="root"></div>
+  <script>
+    // Hide loading when app is ready
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        var loading = document.getElementById('loading');
+        if (loading) {
+          loading.style.opacity = '0';
+          loading.style.transition = 'opacity 0.3s';
+          setTimeout(function() {
+            loading.style.display = 'none';
+          }, 300);
+        }
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

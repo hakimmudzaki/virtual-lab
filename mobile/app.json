@@ -20,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0a0e27"
       },
       "package": "com.virtuallab.fisika",
@@ -33,7 +33,12 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "output": "static"
+      "output": "static",
+      "name": "Virtual Lab",
+      "shortName": "Virtual Lab",
+      "description": "Virtual Physics Lab - Simulasi Gerak Parabola",
+      "themeColor": "#0a0e27",
+      "backgroundColor": "#0a0e27"
     },
     "scheme": "com.virtuallab.fisika",
     "plugins": [
@@ -53,7 +58,13 @@
       },
       "eas": {
         "projectId": "475ae60b-5a09-45aa-b982-5e9fc2716db8"
-      }
+      },
+      "firebaseApiKey": "AIzaSyCWNhyj4hSdPSbDsAF7kWYHluZEl6I6iq0",
+      "firebaseAuthDomain": "pawm-f3491.firebaseapp.com",
+      "firebaseProjectId": "pawm-f3491",
+      "firebaseStorageBucket": "pawm-f3491.firebasestorage.app",
+      "firebaseMessagingSenderId": "271458979986",
+      "firebaseAppId": "1:271458979986:web:12280b3bd630fe6b80164b"
     },
     "owner": "hakimm123"
   }

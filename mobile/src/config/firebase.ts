@@ -8,31 +8,62 @@ import {
 } from 'firebase/auth';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+// Firebase config - menggunakan Constants.expoConfig.extra atau fallback ke hardcoded values
+const getFirebaseConfig = () => {
+  const extra = Constants.expoConfig?.extra;
+  
+  return {
+    apiKey: extra?.firebaseApiKey || "AIzaSyCWNhyj4hSdPSbDsAF7kWYHluZEl6I6iq0",
+    authDomain: extra?.firebaseAuthDomain || "pawm-f3491.firebaseapp.com",
+    projectId: extra?.firebaseProjectId || "pawm-f3491",
+    storageBucket: extra?.firebaseStorageBucket || "pawm-f3491.firebasestorage.app",
+    messagingSenderId: extra?.firebaseMessagingSenderId || "271458979986",
+    appId: extra?.firebaseAppId || "1:271458979986:web:12280b3bd630fe6b80164b",
+  };
 };
 
+const firebaseConfig = getFirebaseConfig();
+
+// Validate config
+if (!firebaseConfig.apiKey) {
+  console.error('Firebase API Key is missing!');
+}
+
 // Initialize Firebase App
-const app = initializeApp(firebaseConfig);
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+} catch (error: any) {
+  // App already initialized
+  if (error.code !== 'app/duplicate-app') {
+    console.error('Firebase initialization error:', error);
+  }
+}
 
 // Initialize Auth dengan persistence yang berbeda untuk Web dan Mobile
-let auth;
+let auth: any;
 
-if (Platform.OS === 'web') {
-  // Untuk Web: gunakan browserLocalPersistence
-  auth = getAuth(app);
-  auth.setPersistence(browserLocalPersistence);
-} else {
-  // Untuk Mobile (iOS/Android): gunakan AsyncStorage
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage)
-  });
+try {
+  if (Platform.OS === 'web') {
+    // Untuk Web: gunakan browserLocalPersistence
+    auth = getAuth(app);
+    auth.setPersistence(browserLocalPersistence);
+  } else {
+    // Untuk Mobile (iOS/Android): gunakan AsyncStorage
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage)
+    });
+  }
+} catch (error: any) {
+  // Auth already initialized
+  if (error.code === 'auth/already-initialized') {
+    auth = getAuth(app);
+  } else {
+    console.error('Auth initialization error:', error);
+    auth = getAuth(app);
+  }
 }
 
 export { app, auth };
