@@ -225,4 +225,11 @@ ISC
 
 ## 👨‍💻 Author
 
-Virtual Lab Team
+18223024 & 18223086
+
+## 👥 Pembagian Tugas
+
+| NIM | Tugas |
+|-----|-------|
+| 18223024 | Frontend (React Native), UI/UX Design, Simulasi Gerak Parabola, Integrasi Firebase Auth, Laporan Tugas |
+| 18223086 | Backend API, Database MongoDB, AI Chatbot (Gemini), Deployment Vercel & Expo, Laporan Tugas|
